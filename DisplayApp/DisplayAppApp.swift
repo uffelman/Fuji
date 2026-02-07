@@ -59,8 +59,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             settingsManager: settingsManager
         )
 
-        // Register existing shortcuts
-        keyboardShortcutManager.refreshHotKeys()
+        // Register existing shortcuts with a slight delay to ensure system is ready
+        // This is especially important when the app launches at login
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            self?.keyboardShortcutManager.refreshHotKeys()
+        }
 
         // Handle shortcut triggers
         keyboardShortcutManager.onShortcutTriggered = { [weak self] _ in
@@ -75,6 +78,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         ) { [weak self] _ in
             self?.menuBarController.rebuildMenu()
             self?.keyboardShortcutManager.refreshHotKeys()
+        }
+        
+        // Re-register shortcuts when app becomes active (e.g., settings window opened)
+        // This helps recover from launch-time registration failures
+        NotificationCenter.default.addObserver(
+            forName: NSApplication.didBecomeActiveNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            // Only re-register if we don't have all shortcuts registered
+            guard let self = self else { return }
+            let expectedShortcutCount = self.settingsManager.presets.filter { $0.keyboardShortcut != nil }.count
+            if self.keyboardShortcutManager.registeredHotKeyCount != expectedShortcutCount {
+                print("App became active - re-registering shortcuts (expected: \(expectedShortcutCount), current: \(self.keyboardShortcutManager.registeredHotKeyCount))")
+                self.keyboardShortcutManager.refreshHotKeys()
+            }
         }
     }
 

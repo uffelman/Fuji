@@ -20,6 +20,10 @@ final class KeyboardShortcutManager {
     private let settingsManager: SettingsManager
 
     var onShortcutTriggered: ((ResolutionPreset) -> Void)?
+    
+    var registeredHotKeyCount: Int {
+        return registeredHotKeys.count
+    }
 
     init(displayManager: DisplayManager, settingsManager: SettingsManager) {
         self.displayManager = displayManager
@@ -96,13 +100,26 @@ final class KeyboardShortcutManager {
     }
 
     private func applyPreset(_ preset: ResolutionPreset) {
-        let configurations = preset.configurations.map { config in
-            (displayID: CGDirectDisplayID(config.displayID), mode: config.mode)
+        // Refresh displays to ensure we have current IDs
+        displayManager.refreshDisplays()
+        
+        // Use smart display matching from extension
+        guard let configurations = preset.matchConfigurations(to: displayManager) else {
+            showNotification(
+                title: "Display Not Found",
+                message: "Could not apply preset '\(preset.name)' - display configuration changed"
+            )
+            return
         }
 
         let success = displayManager.setMultipleDisplayModes(configurations)
         if success {
             showNotification(title: "Resolution Changed", message: "Applied preset: \(preset.name)")
+        } else {
+            showNotification(
+                title: "Failed to Apply Preset",
+                message: "Could not apply '\(preset.name)' - check Console for details"
+            )
         }
 
         onShortcutTriggered?(preset)
@@ -198,15 +215,18 @@ final class KeyboardShortcutManager {
         if !hasPermission {
             print("⚠️ WARNING: Accessibility permissions not granted. Global hotkeys will not work.")
             print("   Please grant accessibility access in System Settings > Privacy & Security > Accessibility")
+            // Don't return - attempt to register anyway as permissions might be pending
         }
 
         print("Refreshing hotkeys, found \(settingsManager.presets.count) presets")
+        var successCount = 0
         for preset in settingsManager.presets {
             if let shortcut = preset.keyboardShortcut {
                 print("Registering hotkey for preset '\(preset.name)': \(shortcut.displayString)")
                 let success = registerHotKey(for: shortcut)
                 if success {
                     print("  ✓ Successfully registered")
+                    successCount += 1
                 } else {
                     print("  ✗ Failed to register")
                 }
@@ -214,7 +234,21 @@ final class KeyboardShortcutManager {
                 print("Preset '\(preset.name)' has no keyboard shortcut")
             }
         }
-        print("Hotkey registration complete. Total registered: \(registeredHotKeys.count)")
+        print("Hotkey registration complete. Total registered: \(registeredHotKeys.count)/\(successCount) attempted")
+        
+        // If we failed to register some hotkeys, schedule a retry
+        let expectedCount = settingsManager.presets.filter { $0.keyboardShortcut != nil }.count
+        if registeredHotKeys.count < expectedCount {
+            print("⚠️ Not all hotkeys registered. Will retry in 2 seconds...")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
+                guard let self = self else { return }
+                // Only retry if we still don't have all shortcuts
+                if self.registeredHotKeys.count < expectedCount {
+                    print("Retrying hotkey registration...")
+                    self.refreshHotKeys()
+                }
+            }
+        }
     }
 }
 

@@ -256,8 +256,16 @@ final class MenuBarController: NSObject {
     @objc private func applyPreset(_ sender: NSMenuItem) {
         guard let preset = sender.representedObject as? ResolutionPreset else { return }
 
-        let configurations = preset.configurations.map { config in
-            (displayID: CGDirectDisplayID(config.displayID), mode: config.mode)
+        // Refresh displays to ensure we have current IDs
+        displayManager.refreshDisplays()
+        
+        // Use smart display matching from extension
+        guard let configurations = preset.matchConfigurations(to: displayManager) else {
+            showAlert(
+                title: "Display Not Found",
+                message: "Could not apply preset '\(preset.name)' - display configuration changed"
+            )
+            return
         }
 
         Task {
