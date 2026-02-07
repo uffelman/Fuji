@@ -215,11 +215,8 @@ final class MenuBarController: NSObject {
         item.representedObject = (display.id, mode)
 
         // Check if this is the current mode
-        if let currentMode = display.currentMode,
-            currentMode.width == mode.width && currentMode.height == mode.height
-                && currentMode.refreshRate == mode.refreshRate
-                && currentMode.isHiDPI == mode.isHiDPI
-        {
+        // Use DisplayMode's == operator which properly compares all properties
+        if let currentMode = display.currentMode, currentMode == mode {
             item.state = .on
         }
 

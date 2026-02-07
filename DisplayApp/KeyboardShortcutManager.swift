@@ -54,6 +54,8 @@ final class KeyboardShortcutManager {
 
         if status != noErr {
             print("Failed to install event handler: \(status)")
+        } else {
+            print("Successfully installed event handler")
         }
     }
 
@@ -122,10 +124,12 @@ final class KeyboardShortcutManager {
     }
 
     func registerHotKey(for shortcut: KeyboardShortcut) -> Bool {
-        // Carbon modifier flags need to be converted for RegisterEventHotKey
-        // The function expects the modifiers in a specific format
+        // Convert from Carbon event modifiers to RegisterEventHotKey format
+        // The modifiers stored in KeyboardShortcut use the old Carbon event format,
+        // but RegisterEventHotKey expects them in a different format
         var carbonModifiers: UInt32 = 0
 
+        // Convert Carbon event modifiers to Carbon hotkey modifiers
         if shortcut.modifiers & UInt32(cmdKey) != 0 {
             carbonModifiers |= UInt32(cmdKey)
         }
@@ -144,11 +148,13 @@ final class KeyboardShortcutManager {
         nextHotKeyID += 1
 
         var hotKeyRef: EventHotKeyRef?
+        // Use GetApplicationEventTarget() - hotkeys registered here will be delivered
+        // to our event handler installed with GetEventDispatcherTarget()
         let status = RegisterEventHotKey(
-            shortcut.keyCode,
+            UInt32(shortcut.keyCode),
             carbonModifiers,
             hotKeyID,
-            GetEventDispatcherTarget(),
+            GetApplicationEventTarget(),
             0,
             &hotKeyRef
         )
@@ -187,13 +193,28 @@ final class KeyboardShortcutManager {
     func refreshHotKeys() {
         unregisterAllHotKeys()
 
+        // Check accessibility permissions
+        let hasPermission = AXIsProcessTrusted()
+        if !hasPermission {
+            print("⚠️ WARNING: Accessibility permissions not granted. Global hotkeys will not work.")
+            print("   Please grant accessibility access in System Settings > Privacy & Security > Accessibility")
+        }
+
         print("Refreshing hotkeys, found \(settingsManager.presets.count) presets")
         for preset in settingsManager.presets {
             if let shortcut = preset.keyboardShortcut {
-                print("Registering hotkey for preset: \(preset.name)")
-                _ = registerHotKey(for: shortcut)
+                print("Registering hotkey for preset '\(preset.name)': \(shortcut.displayString)")
+                let success = registerHotKey(for: shortcut)
+                if success {
+                    print("  ✓ Successfully registered")
+                } else {
+                    print("  ✗ Failed to register")
+                }
+            } else {
+                print("Preset '\(preset.name)' has no keyboard shortcut")
             }
         }
+        print("Hotkey registration complete. Total registered: \(registeredHotKeys.count)")
     }
 }
 

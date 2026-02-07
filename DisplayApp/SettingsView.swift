@@ -246,6 +246,7 @@ struct PresetEditorSheet: View {
     @State private var selectedModes: [CGDirectDisplayID: DisplayMode] = [:]
     @State private var keyboardShortcut: KeyboardShortcut?
     @State private var isRecordingShortcut = false
+    @State private var userEditedName = false
 
     private let shortcutRecorder = ShortcutRecorder()
 
@@ -261,6 +262,9 @@ struct PresetEditorSheet: View {
                     .font(.headline)
                 TextField("Enter preset name", text: $name)
                     .textFieldStyle(.roundedBorder)
+                    .onChange(of: name) { _, _ in
+                        userEditedName = true
+                    }
             }
 
             // Display configurations
@@ -278,6 +282,7 @@ struct PresetEditorSheet: View {
                         selectedMode: selectedModes[display.id],
                         onModeSelected: { mode in
                             selectedModes[display.id] = mode
+                            updateDefaultName()
                         }
                     )
                 }
@@ -358,7 +363,29 @@ struct PresetEditorSheet: View {
                 for config in preset.configurations {
                     selectedModes[CGDirectDisplayID(config.displayID)] = config.mode
                 }
+                userEditedName = true
+            } else {
+                updateDefaultName()
             }
+        }
+    }
+
+    private func updateDefaultName() {
+        // Only update the name automatically if the user hasn't edited it
+        guard !userEditedName else { return }
+        
+        // Generate a name based on selected resolutions
+        if selectedModes.isEmpty {
+            name = ""
+        } else if selectedModes.count == 1, let mode = selectedModes.values.first {
+            // Single display: use the mode's display string
+            name = mode.displayString
+        } else {
+            // Multiple displays: combine their resolutions
+            let sortedModes = selectedModes.sorted { $0.key < $1.key }
+            name = sortedModes.map { _, mode in
+                mode.shortDisplayString
+            }.joined(separator: " + ")
         }
     }
 

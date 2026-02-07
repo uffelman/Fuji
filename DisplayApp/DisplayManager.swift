@@ -50,8 +50,10 @@ struct DisplayMode: Identifiable, Hashable, Codable {
     }
 
     static func == (lhs: DisplayMode, rhs: DisplayMode) -> Bool {
+        // Use epsilon comparison for refresh rate due to floating point precision issues
+        let refreshRateMatch = abs(lhs.refreshRate - rhs.refreshRate) < 0.01
         return lhs.width == rhs.width && lhs.height == rhs.height
-            && lhs.refreshRate == rhs.refreshRate && lhs.isHiDPI == rhs.isHiDPI
+            && refreshRateMatch && lhs.isHiDPI == rhs.isHiDPI
     }
 }
 
