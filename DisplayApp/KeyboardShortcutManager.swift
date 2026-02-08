@@ -10,6 +10,11 @@ import Carbon
 import Foundation
 import UserNotifications
 
+/// Manages global keyboard shortcuts for triggering resolution presets.
+///
+/// This class registers system-wide hotkeys using Carbon Event Manager APIs,
+/// allowing shortcuts to work even when the app is in the background. It handles
+/// shortcut registration, event processing, and preset application.
 @MainActor
 final class KeyboardShortcutManager {
     private var eventHandler: EventHandlerRef?
@@ -32,11 +37,19 @@ final class KeyboardShortcutManager {
         requestNotificationPermission()
     }
 
+    /// Requests permission to display user notifications.
+    ///
+    /// Used to show feedback when presets are applied via keyboard shortcuts.
     private func requestNotificationPermission() {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in
         }
     }
 
+    /// Sets up the Carbon event handler for receiving hotkey events.
+    ///
+    /// Registers a global event handler that receives keyboard hotkey pressed events
+    /// from the system. Uses GetEventDispatcherTarget() to ensure the handler receives
+    /// events even when the app is in the background.
     private func setupEventHandler() {
         var eventType = EventTypeSpec(
             eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
@@ -63,6 +76,14 @@ final class KeyboardShortcutManager {
         }
     }
 
+    /// Handles incoming hotkey pressed events.
+    ///
+    /// Extracts the hotkey ID from the event, looks up the corresponding shortcut and preset,
+    /// and applies the preset to the displays. This method is called from a non-isolated context
+    /// and dispatches preset application to the main actor.
+    ///
+    /// - Parameter event: The Carbon event containing hotkey information
+    /// - Returns: OSStatus indicating whether the event was handled
     nonisolated private func handleHotKeyEvent(_ event: EventRef?) -> OSStatus {
         guard let event = event else { return OSStatus(eventNotHandledErr) }
 
@@ -99,6 +120,12 @@ final class KeyboardShortcutManager {
         return noErr
     }
 
+    /// Applies a resolution preset to all configured displays.
+    ///
+    /// Refreshes the display list, matches preset configurations to current displays,
+    /// applies the resolution changes, and shows a notification with the result.
+    ///
+    /// - Parameter preset: The preset to apply
     private func applyPreset(_ preset: ResolutionPreset) {
         // Refresh displays to ensure we have current IDs
         displayManager.refreshDisplays()
@@ -125,6 +152,11 @@ final class KeyboardShortcutManager {
         onShortcutTriggered?(preset)
     }
 
+    /// Displays a user notification with the given title and message.
+    ///
+    /// - Parameters:
+    ///   - title: The notification title
+    ///   - message: The notification body text
     private func showNotification(title: String, message: String) {
         let content = UNMutableNotificationContent()
         content.title = title
@@ -140,6 +172,13 @@ final class KeyboardShortcutManager {
         UNUserNotificationCenter.current().add(request)
     }
 
+    /// Registers a global hotkey with the system.
+    ///
+    /// Converts the shortcut's modifier flags to Carbon format and registers it using
+    /// the Carbon Event Manager. Assigned hotkey IDs are tracked for later lookup when events arrive.
+    ///
+    /// - Parameter shortcut: The keyboard shortcut to register
+    /// - Returns: `true` if registration succeeded, `false` otherwise
     func registerHotKey(for shortcut: KeyboardShortcut) -> Bool {
         // Convert from Carbon event modifiers to RegisterEventHotKey format
         // The modifiers stored in KeyboardShortcut use the old Carbon event format,
@@ -190,6 +229,10 @@ final class KeyboardShortcutManager {
         return false
     }
 
+    /// Unregisters a previously registered hotkey.
+    ///
+    /// Searches for the hotkey matching the given shortcut and removes it from the system.
+    /// - Parameter shortcut: The keyboard shortcut to unregister
     func unregisterHotKey(for shortcut: KeyboardShortcut) {
         for (id, entry) in registeredHotKeys {
             if entry.shortcut == shortcut {
@@ -200,6 +243,7 @@ final class KeyboardShortcutManager {
         }
     }
 
+    /// Unregisters all currently registered hotkeys.
     func unregisterAllHotKeys() {
         for (_, entry) in registeredHotKeys {
             UnregisterEventHotKey(entry.ref)
@@ -207,6 +251,11 @@ final class KeyboardShortcutManager {
         registeredHotKeys.removeAll()
     }
 
+    /// Refreshes all hotkey registrations from the current preset list.
+    ///
+    /// Unregisters all existing hotkeys and re-registers them based on the current presets
+    /// in SettingsManager. Checks for accessibility permissions and logs detailed information
+    /// about registration success. Implements automatic retry logic if not all shortcuts register successfully.
     func refreshHotKeys() {
         unregisterAllHotKeys()
 
@@ -252,12 +301,19 @@ final class KeyboardShortcutManager {
     }
 }
 
-// Helper class for keyboard shortcut recording
+/// Helper class for recording keyboard shortcuts from user input.
+///
+/// Monitors keyboard events and converts them into KeyboardShortcut objects.
+/// Used in the preset editor to allow users to define custom shortcuts.
 @MainActor
 final class ShortcutRecorder: NSObject {
     private var monitor: Any?
     var onShortcutRecorded: ((KeyboardShortcut?) -> Void)?
 
+    /// Begins monitoring for keyboard events to record a shortcut.
+    ///
+    /// Installs a local event monitor that captures key down events and converts them
+    /// to KeyboardShortcut objects. Automatically stops recording when a valid shortcut is captured.
     func startRecording() {
         stopRecording()
 
@@ -271,6 +327,7 @@ final class ShortcutRecorder: NSObject {
         }
     }
 
+    /// Stops monitoring keyboard events and removes the event monitor.
     func stopRecording() {
         if let monitor = monitor {
             NSEvent.removeMonitor(monitor)

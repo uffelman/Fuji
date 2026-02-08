@@ -9,6 +9,9 @@ import AppKit
 import ApplicationServices
 import SwiftUI
 
+/// The main app structure for DisplayApp.
+///
+/// Configures the SwiftUI app with a Settings scene for managing display presets and preferences.
 @main
 struct DisplayAppApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
@@ -28,10 +31,15 @@ struct DisplayAppApp: App {
     }
 }
 
+/// Notification name posted when presets are modified.
 extension Notification.Name {
     static let presetsDidChange = Notification.Name("presetsDidChange")
 }
 
+/// Application delegate that initializes core app components.
+///
+/// Sets up the menu bar controller, keyboard shortcut manager, and handles
+/// app lifecycle events including launch-time initialization and accessibility permissions.
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var menuBarController: MenuBarController!
     private var keyboardShortcutManager: KeyboardShortcutManager!
@@ -97,10 +105,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    /// Prevents the app from terminating when all windows are closed.
+    ///
+    /// This is essential for menu bar apps that should continue running in the background.
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         return false
     }
 
+    /// Requests accessibility permissions from the system.
+    ///
+    /// Shows the system prompt to add the app to the Accessibility list in System Settings.
+    /// This is required for global keyboard shortcuts to function.
     private func requestAccessibilityPermission() {
         // Show prompt and add app to Accessibility list in System Settings
         let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true] as CFDictionary

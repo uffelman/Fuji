@@ -9,6 +9,10 @@ import AppKit
 import Foundation
 import SwiftUI
 
+/// Manages app settings and resolution presets.
+///
+/// This class handles persistence of user preferences including resolution presets,
+/// launch at login settings, and dock visibility. Settings are stored using UserDefaults.
 @MainActor
 @Observable
 final class SettingsManager {
@@ -37,6 +41,10 @@ final class SettingsManager {
         loadPresets()
     }
 
+    /// Loads presets from UserDefaults.
+    ///
+    /// Attempts to decode the stored preset data. If decoding fails or no data exists,
+    /// initializes with an empty preset list.
     private func loadPresets() {
         guard let data = UserDefaults.standard.data(forKey: presetsKey) else {
             presets = []
@@ -51,6 +59,9 @@ final class SettingsManager {
         }
     }
 
+    /// Saves the current presets to UserDefaults.
+    ///
+    /// Encodes the preset array as JSON and persists it. Logs errors if encoding fails.
     private func savePresets() {
         do {
             let data = try JSONEncoder().encode(presets)
@@ -60,11 +71,18 @@ final class SettingsManager {
         }
     }
 
+    /// Adds a new preset to the list and saves it.
+    ///
+    /// - Parameter preset: The preset to add
     func addPreset(_ preset: ResolutionPreset) {
         presets.append(preset)
         savePresets()
     }
 
+    /// Updates an existing preset with new values.
+    ///
+    /// Finds the preset by ID and replaces it with the updated version.
+    /// - Parameter preset: The updated preset
     func updatePreset(_ preset: ResolutionPreset) {
         if let index = presets.firstIndex(where: { $0.id == preset.id }) {
             presets[index] = preset
@@ -72,6 +90,9 @@ final class SettingsManager {
         }
     }
 
+    /// Deletes a preset from the list.
+    ///
+    /// - Parameter preset: The preset to delete
     func deletePreset(_ preset: ResolutionPreset) {
         presets.removeAll { $0.id == preset.id }
         savePresets()
@@ -87,10 +108,18 @@ final class SettingsManager {
         savePresets()
     }
 
+    /// Finds a preset that has the given keyboard shortcut.
+    ///
+    /// - Parameter shortcut: The keyboard shortcut to search for
+    /// - Returns: The matching preset, or nil if none is found
     func preset(for shortcut: KeyboardShortcut) -> ResolutionPreset? {
         return presets.first { $0.keyboardShortcut == shortcut }
     }
 
+    /// Updates the app's dock visibility based on the current setting.
+    ///
+    /// Changes the app's activation policy between regular (visible in dock)
+    /// and accessory (menu bar only).
     private func updateDockVisibility() {
         if showInDock {
             NSApplication.shared.setActivationPolicy(.regular)

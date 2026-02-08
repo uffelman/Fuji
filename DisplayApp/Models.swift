@@ -9,6 +9,10 @@ import Foundation
 import Carbon
 import AppKit
 
+/// Represents a display resolution configuration for a specific display.
+///
+/// Links a display (by ID) with a desired display mode. Used when saving and applying
+/// resolution presets that may affect multiple displays.
 struct DisplayConfiguration: Codable, Identifiable, Hashable {
     let id: UUID
     let displayID: UInt32
@@ -21,6 +25,10 @@ struct DisplayConfiguration: Codable, Identifiable, Hashable {
     }
 }
 
+/// A saved preset containing display configurations and an optional keyboard shortcut.
+///
+/// Presets allow users to quickly switch between predefined display arrangements.
+/// Each preset can configure one or more displays and be triggered via keyboard shortcut.
 struct ResolutionPreset: Codable, Identifiable {
     let id: UUID
     var name: String
@@ -35,10 +43,18 @@ struct ResolutionPreset: Codable, Identifiable {
     }
 }
 
+/// Represents a keyboard shortcut with key code and modifier keys.
+///
+/// Stores the raw key code and modifier flags from Carbon events, providing
+/// conversion to human-readable strings for display in the UI.
 struct KeyboardShortcut: Codable, Hashable, Equatable {
     let keyCode: UInt32
     let modifiers: UInt32
 
+    /// A human-readable representation of the keyboard shortcut.
+    ///
+    /// Uses Unicode symbols for modifier keys (⌃ ⌥ ⇧ ⌘) followed by the key character.
+    /// Example: "⌘⇧P"
     var displayString: String {
         var parts: [String] = []
 
@@ -62,6 +78,11 @@ struct KeyboardShortcut: Codable, Hashable, Equatable {
         return parts.joined()
     }
 
+    /// Maps a key code to its string representation.
+    ///
+    /// Includes alphabetic keys, numbers, function keys, and special keys.
+    /// - Parameter keyCode: The raw key code from a keyboard event
+    /// - Returns: The string representation of the key, or nil if unmapped
     private func keyCodeToString(_ keyCode: UInt32) -> String? {
         let keyCodeMap: [UInt32: String] = [
             0: "A", 1: "S", 2: "D", 3: "F", 4: "H", 5: "G", 6: "Z", 7: "X",
@@ -79,6 +100,13 @@ struct KeyboardShortcut: Codable, Hashable, Equatable {
         return keyCodeMap[keyCode]
     }
 
+    /// Creates a KeyboardShortcut from an NSEvent.
+    ///
+    /// Extracts the key code and modifier flags from a key down event.
+    /// Requires at least one modifier key to be valid.
+    ///
+    /// - Parameter event: The keyboard event to convert
+    /// - Returns: A KeyboardShortcut, or nil if no modifiers are present
     static func from(event: NSEvent) -> KeyboardShortcut? {
         var modifiers: UInt32 = 0
 

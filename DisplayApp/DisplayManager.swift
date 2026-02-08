@@ -10,6 +10,10 @@ import CoreGraphics
 import Foundation
 import IOKit
 
+/// Represents a single display mode (resolution) that a display can support.
+///
+/// Each mode includes dimensions, refresh rate, HiDPI status, and bit depth.
+/// Display modes are uniquely identified and can be compared for equality based on their properties.
 struct DisplayMode: Identifiable, Hashable, Codable {
     let id: UUID
     let modeNumber: Int32
@@ -19,12 +23,19 @@ struct DisplayMode: Identifiable, Hashable, Codable {
     let isHiDPI: Bool
     let bitDepth: Int
 
+    /// A human-readable string representation of the display mode with full details.
+    ///
+    /// Includes resolution, refresh rate, and HiDPI status.
+    /// Example: "1920 × 1080 @ 60Hz (HiDPI)"
     var displayString: String {
         let hiDPILabel = isHiDPI ? " (HiDPI)" : ""
         let refreshString = refreshRate > 0 ? " @ \(Int(refreshRate))Hz" : ""
         return "\(width) × \(height)\(refreshString)\(hiDPILabel)"
     }
 
+    /// A short string representation showing only the resolution.
+    ///
+    /// Example: "1920×1080"
     var shortDisplayString: String {
         return "\(width)×\(height)"
     }
@@ -49,6 +60,10 @@ struct DisplayMode: Identifiable, Hashable, Codable {
         hasher.combine(isHiDPI)
     }
 
+    /// Implements custom equality comparison for display modes.
+    ///
+    /// Two modes are considered equal if they have matching width, height, refresh rate (within 0.01Hz tolerance),
+    /// and HiDPI status. This accounts for floating-point precision issues with refresh rates.
     static func == (lhs: DisplayMode, rhs: DisplayMode) -> Bool {
         // Use epsilon comparison for refresh rate due to floating point precision issues
         let refreshRateMatch = abs(lhs.refreshRate - rhs.refreshRate) < 0.01
@@ -57,6 +72,10 @@ struct DisplayMode: Identifiable, Hashable, Codable {
     }
 }
 
+/// Represents a physical display connected to the system.
+///
+/// Contains information about the display's identity, capabilities, available modes,
+/// and current configuration. The display ID is unique and assigned by the system.
 struct Display: Identifiable, Hashable {
     let id: CGDirectDisplayID
     let name: String
@@ -66,6 +85,9 @@ struct Display: Identifiable, Hashable {
     var currentMode: DisplayMode?
     var defaultMode: DisplayMode?
 
+    /// A human-readable label for the display including its status indicators.
+    ///
+    /// Appends "(Main)" if this is the main display and "- Built-in" if it's the built-in display.
     var displayLabel: String {
         var label = name
         if isMain {
@@ -77,6 +99,11 @@ struct Display: Identifiable, Hashable {
         return label
     }
 
+    /// Checks if the given mode is the default mode for this display.
+    ///
+    /// The default mode is typically the display's native resolution with optimal scaling.
+    /// - Parameter mode: The display mode to check
+    /// - Returns: `true` if the mode matches the display's default mode
     func isDefaultMode(_ mode: DisplayMode) -> Bool {
         guard let defaultMode = defaultMode else { return false }
         return mode.width == defaultMode.width && mode.height == defaultMode.height
@@ -92,6 +119,11 @@ struct Display: Identifiable, Hashable {
     }
 }
 
+/// Manages all connected displays and their resolution modes.
+///
+/// This class provides a centralized interface for discovering displays, querying their capabilities,
+/// and changing display resolutions. It monitors for display configuration changes and maintains
+/// an up-to-date list of available displays. All display operations use Core Graphics APIs.
 @MainActor
 @Observable
 final class DisplayManager {
@@ -109,6 +141,10 @@ final class DisplayManager {
         unregisterDisplayChanges()
     }
 
+    /// Queries the system for all active displays and updates the internal display list.
+    ///
+    /// This method retrieves up to 16 connected displays from the system and creates
+    /// Display objects with their available modes and current configuration.
     func refreshDisplays() {
         var displayCount: UInt32 = 0
         var displayIDs = [CGDirectDisplayID](repeating: 0, count: 16)
@@ -125,6 +161,12 @@ final class DisplayManager {
         }
     }
 
+    /// Creates a Display object for the given display ID by querying its properties.
+    ///
+    /// Retrieves the display's name, type (built-in or external), main display status,
+    /// available modes, current mode, and default mode.
+    /// - Parameter displayID: The Core Graphics display ID
+    /// - Returns: A Display object, or nil if the display cannot be queried
     private func createDisplay(for displayID: CGDirectDisplayID) -> Display? {
         let name = getDisplayName(for: displayID)
         let isBuiltIn = CGDisplayIsBuiltin(displayID) != 0
@@ -144,6 +186,14 @@ final class DisplayManager {
         )
     }
 
+    /// Determines the default "best" mode for a display based on its native panel resolution.
+    ///
+    /// For Retina displays, this is the HiDPI mode at half the native resolution (true 2x scaling).
+    /// For non-Retina displays, this is the native resolution in 1:1 mode.
+    /// - Parameters:
+    ///   - displayID: The Core Graphics display ID
+    ///   - modes: Available display modes for this display
+    /// - Returns: The default display mode, or nil if it cannot be determined
     private func getDefaultMode(for displayID: CGDirectDisplayID, from modes: [DisplayMode])
         -> DisplayMode?
     {
@@ -180,6 +230,15 @@ final class DisplayManager {
         return nil
     }
 
+    /// Detects the native physical panel resolution of a display.
+    ///
+    /// This method identifies the true pixel dimensions of the display panel by analyzing
+    /// available display modes. It looks for known Apple display resolutions and validates
+    /// them by checking for matching HiDPI and 1:1 modes. For unknown displays, it uses
+    /// heuristics to find the highest resolution with proper HiDPI support.
+    ///
+    /// - Parameter displayID: The Core Graphics display ID
+    /// - Returns: A tuple containing the native width and height in pixels, or nil if detection fails
     private func getNativePanelResolution(for displayID: CGDirectDisplayID) -> (
         width: Int, height: Int
     )? {
@@ -269,6 +328,12 @@ final class DisplayManager {
         return nil
     }
 
+    /// Retrieves the human-readable name for a display.
+    ///
+    /// Attempts to match the display ID with NSScreen objects to get the localized name.
+    /// Falls back to "Built-in Display" or a generic name with the display ID.
+    /// - Parameter displayID: The Core Graphics display ID
+    /// - Returns: The display's name
     private func getDisplayName(for displayID: CGDirectDisplayID) -> String {
         // Use NSScreen to get the display name
         for screen in NSScreen.screens {
@@ -290,6 +355,14 @@ final class DisplayManager {
         return "Display \(displayID)"
     }
 
+    /// Retrieves all available display modes for a given display.
+    ///
+    /// Queries Core Graphics for all usable modes, filters duplicates, and sorts them
+    /// by resolution (descending) and refresh rate (descending). HiDPI modes are prioritized
+    /// when resolutions are equal.
+    ///
+    /// - Parameter displayID: The Core Graphics display ID
+    /// - Returns: An array of sorted DisplayMode objects
     private func getDisplayModes(for displayID: CGDirectDisplayID) -> [DisplayMode] {
         let options: CFDictionary =
             [kCGDisplayShowDuplicateLowResolutionModes: kCFBooleanTrue] as CFDictionary
@@ -346,6 +419,10 @@ final class DisplayManager {
         return modes
     }
 
+    /// Gets the currently active display mode for a display.
+    ///
+    /// - Parameter displayID: The Core Graphics display ID
+    /// - Returns: The current DisplayMode, or nil if it cannot be determined
     private func getCurrentMode(for displayID: CGDirectDisplayID) -> DisplayMode? {
         guard let cgMode = CGDisplayCopyDisplayMode(displayID) else {
             return nil
@@ -363,6 +440,16 @@ final class DisplayManager {
         )
     }
 
+    /// Changes a display to the specified mode.
+    ///
+    /// Initiates a display configuration transaction, finds the matching Core Graphics mode,
+    /// applies the change, and commits it permanently. Automatically refreshes the display
+    /// list after a short delay to reflect the changes.
+    ///
+    /// - Parameters:
+    ///   - mode: The target DisplayMode to apply
+    ///   - displayID: The Core Graphics display ID
+    /// - Returns: `true` if the mode change was successful, `false` otherwise
     func setDisplayMode(_ mode: DisplayMode, for displayID: CGDirectDisplayID) -> Bool {
         let options: CFDictionary =
             [kCGDisplayShowDuplicateLowResolutionModes: kCFBooleanTrue] as CFDictionary
@@ -413,6 +500,14 @@ final class DisplayManager {
         return true
     }
 
+    /// Changes multiple displays to specified modes atomically.
+    ///
+    /// This method allows changing several displays in a single configuration transaction,
+    /// ensuring all changes take effect simultaneously. This is useful for preset application
+    /// where multiple displays need coordinated resolution changes.
+    ///
+    /// - Parameter configurations: An array of tuples containing display IDs and their target modes
+    /// - Returns: `true` if all mode changes were successful, `false` if any failed
     func setMultipleDisplayModes(
         _ configurations: [(displayID: CGDirectDisplayID, mode: DisplayMode)]
     ) -> Bool {
@@ -469,6 +564,11 @@ final class DisplayManager {
         return true
     }
 
+    /// Registers a callback to monitor display configuration changes.
+    ///
+    /// This method sets up system-level notifications for display events including
+    /// mode changes, display additions, and removals. When triggered, it automatically
+    /// refreshes the display list on the main actor.
     private func registerForDisplayChanges() {
         CGDisplayRegisterReconfigurationCallback(
             { displayID, flags, userInfo in

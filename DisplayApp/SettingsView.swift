@@ -9,6 +9,9 @@ import ApplicationServices
 import ServiceManagement
 import SwiftUI
 
+/// The main settings view for the application.
+///
+/// Displays a tab-based interface with sections for managing presets, general settings, and app information.
 struct SettingsView: View {
     let displayManager: DisplayManager
     let settingsManager: SettingsManager
@@ -39,6 +42,10 @@ struct SettingsView: View {
     }
 }
 
+/// The presets management tab.
+///
+/// Allows users to create, edit, delete, and reorder resolution presets.
+/// Shows warnings when accessibility permissions are not granted.
 struct PresetsTab: View {
     let displayManager: DisplayManager
     let settingsManager: SettingsManager
@@ -140,10 +147,17 @@ struct PresetsTab: View {
     }
 }
 
+/// Checks if the app has accessibility permissions.
+///
+/// - Returns: `true` if accessibility access is granted, `false` otherwise
 private func checkAccessibilityPermission() -> Bool {
     AXIsProcessTrusted()
 }
 
+/// A warning banner displayed when accessibility permissions are not granted.
+///
+/// Shows information about why the permission is needed and provides buttons to
+/// open System Settings and recheck permission status.
 struct AccessibilityPermissionWarning: View {
     let onRecheck: () -> Void
 
@@ -188,6 +202,7 @@ struct AccessibilityPermissionWarning: View {
     }
 }
 
+/// A list row displaying a preset with its name, configuration summary, and action buttons.
 struct PresetRow: View {
     let preset: ResolutionPreset
     let onEdit: () -> Void
@@ -227,6 +242,7 @@ struct PresetRow: View {
         .padding(.vertical, 4)
     }
 
+    /// Generates a comma-separated summary of the preset's display configurations.
     private var configurationSummary: String {
         preset.configurations.map { config in
             "\(config.mode.shortDisplayString)"
@@ -234,6 +250,11 @@ struct PresetRow: View {
     }
 }
 
+/// A sheet view for creating or editing a resolution preset.
+///
+/// Provides an interface for naming the preset, selecting display modes for each display,
+/// and optionally recording a keyboard shortcut. Supports both creating new presets and
+/// editing existing ones.
 struct PresetEditorSheet: View {
     let displayManager: DisplayManager
     let settingsManager: SettingsManager
@@ -293,6 +314,9 @@ struct PresetEditorSheet: View {
                 Text("Keyboard Shortcut (Optional)")
                     .font(.headline)
 
+                // Displays different UI states: recording, showing shortcut, or empty
+                // When recording, shows a prompt. When a shortcut exists, displays it with a clear button.
+                // Otherwise shows "No shortcut set" message. The Record/Cancel button toggles recording state.
                 HStack {
                     if isRecordingShortcut {
                         Text("Press a key combination...")
@@ -370,6 +394,10 @@ struct PresetEditorSheet: View {
         }
     }
 
+    /// Updates the preset name automatically based on selected display modes.
+    ///
+    /// Only updates if the user hasn't manually edited the name. For single displays,
+    /// uses the full mode description. For multiple displays, combines their resolutions.
     private func updateDefaultName() {
         // Only update the name automatically if the user hasn't edited it
         guard !userEditedName else { return }
@@ -389,6 +417,10 @@ struct PresetEditorSheet: View {
         }
     }
 
+    /// Saves the preset with current settings and dismisses the sheet.
+    ///
+    /// Creates a new ResolutionPreset from the current state. When editing an existing preset,
+    /// deletes the old one before saving to maintain the same ID.
     private func savePreset() {
         let configurations = selectedModes.map { displayID, mode in
             DisplayConfiguration(displayID: displayID, mode: mode)
@@ -407,8 +439,6 @@ struct PresetEditorSheet: View {
                 configurations: configurations,
                 keyboardShortcut: keyboardShortcut
             )
-            // Create a new preset with the same ID by using a custom init
-            var mutablePreset = newPreset
             // We need to recreate with same ID - this is a workaround
             settingsManager.deletePreset(existingPreset)
         }
@@ -418,6 +448,9 @@ struct PresetEditorSheet: View {
     }
 }
 
+/// A view for selecting a display mode from a list of available modes.
+///
+/// Shows the display's name and current selection, with a menu for choosing different modes.
 struct DisplayModeSelector: View {
     let display: Display
     let selectedMode: DisplayMode?
@@ -483,6 +516,9 @@ struct DisplayModeSelector: View {
     }
 }
 
+/// The general settings tab.
+///
+/// Provides controls for launch at login and dock visibility preferences.
 struct GeneralTab: View {
     let settingsManager: SettingsManager
 
@@ -514,6 +550,9 @@ struct GeneralTab: View {
         }
     }
 
+    /// Registers or unregisters the app to launch at login using SMAppService.
+    ///
+    /// - Parameter enabled: Whether to enable or disable launch at login
     private func updateLaunchAtLogin(enabled: Bool) {
         // Use SMAppService for modern macOS launch at login
         if #available(macOS 13.0, *) {
@@ -530,6 +569,9 @@ struct GeneralTab: View {
     }
 }
 
+/// The about tab showing app information.
+///
+/// Displays the app name, version, icon, and description.
 struct AboutTab: View {
     var body: some View {
         VStack(spacing: 20) {

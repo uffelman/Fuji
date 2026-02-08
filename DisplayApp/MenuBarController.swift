@@ -8,6 +8,11 @@
 import AppKit
 import SwiftUI
 
+/// Manages the menu bar status item and its menu.
+///
+/// Creates and maintains the app's menu bar presence, building dynamic menus that show
+/// available displays, resolution options, presets, and app controls. Handles user interactions
+/// and coordinates with DisplayManager for resolution changes.
 @MainActor
 final class MenuBarController: NSObject {
     private var statusItem: NSStatusItem!
@@ -23,6 +28,7 @@ final class MenuBarController: NSObject {
         setupStatusItem()
     }
 
+    /// Creates the status bar item and initializes the menu.
     private func setupStatusItem() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
 
@@ -35,6 +41,11 @@ final class MenuBarController: NSObject {
         rebuildMenu()
     }
 
+    /// Rebuilds the entire menu with current display and preset information.
+    ///
+    /// This method is called whenever displays change, presets are modified, or resolutions
+    /// are applied. It dynamically generates menu items for all displays, their modes, and
+    /// available presets.
     func rebuildMenu() {
         menu = NSMenu()
         menu.autoenablesItems = false
@@ -101,6 +112,12 @@ final class MenuBarController: NSObject {
         statusItem.menu = menu
     }
 
+    /// Adds a section to the menu for a specific display.
+    ///
+    /// Creates a display header, current resolution indicator, and submenu with all available
+    /// resolution modes grouped by resolution dimensions.
+    ///
+    /// - Parameter display: The display to add to the menu
     private func addDisplaySection(_ display: Display) {
         // Display header
         let headerItem = NSMenuItem(title: display.displayLabel, action: nil, keyEquivalent: "")
@@ -141,7 +158,8 @@ final class MenuBarController: NSObject {
             modesByResolution[key, default: []].append(mode)
         }
 
-        // Sort resolutions by size
+        // Sort resolutions by pixel dimensions (larger to smaller)
+        // Parses the resolution strings (e.g., "1920×1080") to compare numerically
         let sortedResolutions = modesByResolution.keys.sorted { key1, key2 in
             let parts1 = key1.split(separator: "×").compactMap { Int($0) }
             let parts2 = key2.split(separator: "×").compactMap { Int($0) }
@@ -198,6 +216,16 @@ final class MenuBarController: NSObject {
         menu.addItem(NSMenuItem.separator())
     }
 
+    /// Creates a menu item for a specific display mode.
+    ///
+    /// Builds a menu item with appropriate title formatting, checkmark for current mode,
+    /// and special styling for the default mode.
+    ///
+    /// - Parameters:
+    ///   - mode: The display mode
+    ///   - display: The display that owns this mode
+    ///   - showFullDetails: Whether to show full mode details (refresh rate, HiDPI) or just resolution
+    /// - Returns: A configured NSMenuItem
     private func createModeMenuItem(
         mode: DisplayMode, display: Display, showFullDetails: Bool = false
     ) -> NSMenuItem {
@@ -233,6 +261,12 @@ final class MenuBarController: NSObject {
         return item
     }
 
+    /// Handles selection of a resolution from the menu.
+    ///
+    /// Extracts the display ID and mode from the menu item's represented object and
+    /// applies the resolution change.
+    ///
+    /// - Parameter sender: The menu item that was clicked
     @objc private func selectResolution(_ sender: NSMenuItem) {
         guard let info = sender.representedObject as? (CGDirectDisplayID, DisplayMode) else {
             return
@@ -253,6 +287,12 @@ final class MenuBarController: NSObject {
         }
     }
 
+    /// Applies a resolution preset from the menu.
+    ///
+    /// Matches the preset's configurations to current displays and applies all
+    /// resolution changes atomically.
+    ///
+    /// - Parameter sender: The menu item representing the preset
     @objc private func applyPreset(_ sender: NSMenuItem) {
         guard let preset = sender.representedObject as? ResolutionPreset else { return }
 
@@ -282,11 +322,13 @@ final class MenuBarController: NSObject {
         }
     }
 
+    /// Refreshes the display list and rebuilds the menu.
     @objc private func refreshDisplays() {
         displayManager.refreshDisplays()
         rebuildMenu()
     }
 
+    /// Opens the settings window.
     @objc private func openSettings() {
         NSApp.activate(ignoringOtherApps: true)
         // Use the legacy window approach since SwiftUI Settings scene
@@ -294,7 +336,10 @@ final class MenuBarController: NSObject {
         openSettingsWindowLegacy()
     }
 
-    // Keep the old implementation as fallback (unused now)
+    /// Creates and displays a standalone settings window using NSHostingController.
+    ///
+    /// This legacy approach creates a window manually when the SwiftUI Settings scene
+    /// is not reliably accessible from outside SwiftUI contexts.
     private func openSettingsWindowLegacy() {
         if settingsWindow == nil {
             let settingsView = SettingsView(
@@ -320,10 +365,16 @@ final class MenuBarController: NSObject {
         NSApp.activate(ignoringOtherApps: true)
     }
 
+    /// Terminates the application.
     @objc private func quitApp() {
         NSApp.terminate(nil)
     }
 
+    /// Displays an alert dialog with the given title and message.
+    ///
+    /// - Parameters:
+    ///   - title: The alert title
+    ///   - message: The alert message text
     private func showAlert(title: String, message: String) {
         let alert = NSAlert()
         alert.messageText = title

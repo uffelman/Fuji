@@ -9,8 +9,18 @@ import Foundation
 import CoreGraphics
 
 extension ResolutionPreset {
-    /// Intelligently match stored display configurations to current displays
-    /// This handles cases where display IDs change after restart
+    /// Intelligently matches stored display configurations to current displays.
+    ///
+    /// This method handles cases where display IDs change after system restart by attempting
+    /// multiple matching strategies:
+    /// 1. Direct ID match (preferred)
+    /// 2. Single display fallback (if only one display is connected)
+    /// 3. Mode availability matching (checks if the requested mode exists on available displays)
+    ///
+    /// This ensures presets remain functional even when hardware IDs change.
+    ///
+    /// - Parameter displayManager: The display manager with current display information
+    /// - Returns: An array of matched configurations, or nil if matching fails
     func matchConfigurations(to displayManager: DisplayManager) -> [(displayID: CGDirectDisplayID, mode: DisplayMode)]? {
         var configurations: [(displayID: CGDirectDisplayID, mode: DisplayMode)] = []
         
