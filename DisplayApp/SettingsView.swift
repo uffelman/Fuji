@@ -419,27 +419,23 @@ struct PresetEditorSheet: View {
 
     /// Saves the preset with current settings and dismisses the sheet.
     ///
-    /// Creates a new ResolutionPreset from the current state. When editing an existing preset,
-    /// deletes the old one before saving to maintain the same ID.
+    /// Creates a new `ResolutionPreset` from the current state. When editing an existing
+    /// preset, the old record is removed first so the updated version takes its place in
+    /// the list (position is preserved by `SettingsManager.updatePreset`).
     private func savePreset() {
         let configurations = selectedModes.map { displayID, mode in
             DisplayConfiguration(displayID: displayID, mode: mode)
         }
 
-        var newPreset = ResolutionPreset(
+        let newPreset = ResolutionPreset(
             name: name,
             configurations: configurations,
             keyboardShortcut: keyboardShortcut
         )
 
-        // If editing, preserve the original ID
+        // When editing, remove the old record before handing the updated preset
+        // to the caller — the caller's onSave handler re-inserts it.
         if let existingPreset = preset {
-            newPreset = ResolutionPreset(
-                name: name,
-                configurations: configurations,
-                keyboardShortcut: keyboardShortcut
-            )
-            // We need to recreate with same ID - this is a workaround
             settingsManager.deletePreset(existingPreset)
         }
 

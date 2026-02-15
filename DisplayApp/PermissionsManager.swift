@@ -93,7 +93,11 @@ final class PermissionsManager: PermissionsManaging {
 
     private func startPolling() {
         pollingTask?.cancel()
-        pollingTask = Task { [weak self] in
+        // Explicit @MainActor annotation ensures AXIsProcessTrusted() and the
+        // subsequent property write both run on the main actor, matching the
+        // class's own isolation. A bare Task {} would hop to the cooperative
+        // pool and lose actor isolation.
+        pollingTask = Task { @MainActor [weak self] in
             guard let self else { return }
             while !Task.isCancelled {
                 try? await Task.sleep(for: pollingInterval)

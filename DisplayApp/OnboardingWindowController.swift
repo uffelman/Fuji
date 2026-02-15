@@ -68,8 +68,8 @@ final class OnboardingWindowController: NSObject, NSWindowDelegate {
                 guard let win,
                       let contentView = win.contentViewController?.view else { return }
                 // Re-measure the full view (page + footer) now that content has
-                // settled, and resize keeping the top-left corner anchored.
-                let fixedWidth: CGFloat = 480
+                // settled, then resize keeping the top-left corner anchored.
+                // Width is preserved because we never mutate frame.size.width.
                 let newContentHeight = contentView.fittingSize.height
                 let titlebarHeight = win.frame.height - win.contentRect(forFrameRect: win.frame).height
                 let newFrameHeight = newContentHeight + titlebarHeight
@@ -77,8 +77,6 @@ final class OnboardingWindowController: NSObject, NSWindowDelegate {
                 frame.origin.y += frame.height - newFrameHeight
                 frame.size.height = newFrameHeight
                 win.setFrame(frame, display: true, animate: true)
-                // Keep width pinned after resize.
-                var f = win.frame; f.size.width = fixedWidth; win.setFrame(f, display: false)
             }
         )
 
