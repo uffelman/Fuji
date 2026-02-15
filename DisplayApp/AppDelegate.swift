@@ -18,6 +18,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var keyboardShortcutManager: KeyboardShortcutManager!
     private let displayManager = DisplayManager.shared
     private let settingsManager = SettingsManager.shared
+    private let permissionsManager = PermissionsManager()
+    private lazy var onboardingController = OnboardingWindowController(permissions: permissionsManager)
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Hide dock icon by default (menu bar app)
@@ -25,8 +27,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             NSApplication.shared.setActivationPolicy(.accessory)
         }
 
-        // Request accessibility permissions (adds app to the list in System Settings)
-        requestAccessibilityPermission()
+        // Show onboarding whenever the app launches without accessibility access.
+        // The window is dismissed via its own close button or internal navigation,
+        // and will not reappear until the next launch.
+        //
+        // Because we already know permissions are missing at this point, we skip
+        // straight to the permissions page (startOnPage: 1) so the user is not
+        // presented with a welcome screen they must click through first.
+        //
+        // In debug builds, the developer toggle can force the full welcome flow
+        // (startOnPage: 0) to show at every launch regardless of permission state.
+        #if DEBUG
+        let forceOnboarding = UserDefaults.standard.bool(forKey: DebugSettings.forceOnboardingKey)
+        if forceOnboarding || !permissionsManager.isAccessibilityTrusted {
+            // Full welcome flow when force-enabled so the developer can preview both pages;
+            // permissions-only page when triggered naturally by missing access.
+            onboardingController.show(startOnPage: forceOnboarding ? 0 : 1)
+        }
+        #else
+        if !permissionsManager.isAccessibilityTrusted {
+            onboardingController.show(startOnPage: 1)
+        }
+        #endif
 
         // Initialize menu bar controller
         menuBarController = MenuBarController(
@@ -37,15 +59,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Initialize keyboard shortcut manager
         keyboardShortcutManager = KeyboardShortcutManager(
             displayManager: displayManager,
-            settingsManager: settingsManager
+            settingsManager: settingsManager,
+            permissionsManager: permissionsManager
         )
 
         // Register existing shortcuts with a slight delay to ensure system is ready
         // This is especially important when the app launches at login
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-            MainActor.assumeIsolated {
-                self?.keyboardShortcutManager.refreshHotKeys()
-            }
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .milliseconds(500))
+            self?.keyboardShortcutManager.refreshHotKeys()
         }
 
         // Handle shortcut triggers
@@ -92,15 +114,5 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// This is essential for menu bar apps that should continue running in the background.
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         return false
-    }
-
-    /// Requests accessibility permissions from the system.
-    ///
-    /// Shows the system prompt to add the app to the Accessibility list in System Settings.
-    /// This is required for global keyboard shortcuts to function.
-    private func requestAccessibilityPermission() {
-        // Show prompt and add app to Accessibility list in System Settings
-        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true] as CFDictionary
-        _ = AXIsProcessTrustedWithOptions(options)
     }
 }

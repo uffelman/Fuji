@@ -23,6 +23,7 @@ final class KeyboardShortcutManager {
 
     private let displayManager: DisplayManager
     private let settingsManager: SettingsManager
+    private let permissionsManager: any PermissionsManaging
 
     var onShortcutTriggered: ((ResolutionPreset) -> Void)?
     
@@ -30,9 +31,10 @@ final class KeyboardShortcutManager {
         return registeredHotKeys.count
     }
 
-    init(displayManager: DisplayManager, settingsManager: SettingsManager) {
+    init(displayManager: DisplayManager, settingsManager: SettingsManager, permissionsManager: any PermissionsManaging) {
         self.displayManager = displayManager
         self.settingsManager = settingsManager
+        self.permissionsManager = permissionsManager
         setupEventHandler()
         requestNotificationPermission()
     }
@@ -260,7 +262,7 @@ final class KeyboardShortcutManager {
         unregisterAllHotKeys()
 
         // Check accessibility permissions
-        let hasPermission = AXIsProcessTrusted()
+        let hasPermission = permissionsManager.isAccessibilityTrusted
         if !hasPermission {
             print("⚠️ WARNING: Accessibility permissions not granted. Global hotkeys will not work.")
             print("   Please grant accessibility access in System Settings > Privacy & Security > Accessibility")

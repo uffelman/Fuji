@@ -73,3 +73,4 @@ If SwiftData is configured to use CloudKit:
 - Only write UI tests if unit tests are not possible.
 - Add code comments and documentation comments as needed.
 - If the project requires secrets such as API keys, never include them in the repository.
+- Do not add a duplicate file (e.g., "MyFile 2.swift") when it's possible to modify the existing file ("MyFile.swift").

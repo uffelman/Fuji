@@ -519,11 +519,19 @@ struct DisplayModeSelector: View {
 /// The general settings tab.
 ///
 /// Provides controls for launch at login and dock visibility preferences.
+/// In debug builds, an additional Developer section exposes convenience toggles
+/// that are never compiled into release builds.
 struct GeneralTab: View {
     let settingsManager: SettingsManager
 
     @State private var launchAtLogin = false
     @State private var showInDock = false
+
+    // Kept inside the view so the toggle stays reactive.
+    // Compiled away entirely in release builds.
+    #if DEBUG
+    @State private var forceOnboarding = DebugSettings.forceOnboarding
+    #endif
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
@@ -541,12 +549,45 @@ struct GeneralTab: View {
                     settingsManager.showInDock = newValue
                 }
 
+            // ── Developer section ─────────────────────────────────────────
+            // Visible only in Debug builds. The entire block is stripped by the
+            // compiler when building with the Release / Archive scheme.
+            #if DEBUG
+            Divider()
+
+            VStack(alignment: .leading, spacing: 8) {
+                Label("Developer", systemImage: "hammer.fill")
+                    .font(.headline)
+                    .foregroundStyle(.orange)
+
+                Text("These settings are only visible in Debug builds and are never shown to real users.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                Toggle("Always show onboarding at launch", isOn: $forceOnboarding)
+                    .onChange(of: forceOnboarding) { _, newValue in
+                        DebugSettings.forceOnboarding = newValue
+                    }
+                    .help("When enabled, the onboarding window is shown at every launch regardless of accessibility permission state. Relaunch the app to see the effect.")
+            }
+            .padding(12)
+            .background(Color.orange.opacity(0.06))
+            .clipShape(.rect(cornerRadius: 8))
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .strokeBorder(Color.orange.opacity(0.25), lineWidth: 1)
+            )
+            #endif
+
             Spacer()
         }
         .padding()
         .onAppear {
             launchAtLogin = settingsManager.launchAtLogin
             showInDock = settingsManager.showInDock
+            #if DEBUG
+            forceOnboarding = DebugSettings.forceOnboarding
+            #endif
         }
     }
 
