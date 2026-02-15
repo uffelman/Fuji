@@ -419,27 +419,23 @@ struct PresetEditorSheet: View {
 
     /// Saves the preset with current settings and dismisses the sheet.
     ///
-    /// Creates a new ResolutionPreset from the current state. When editing an existing preset,
-    /// deletes the old one before saving to maintain the same ID.
+    /// Creates a new `ResolutionPreset` from the current state. When editing an existing
+    /// preset, the old record is removed first so the updated version takes its place in
+    /// the list (position is preserved by `SettingsManager.updatePreset`).
     private func savePreset() {
         let configurations = selectedModes.map { displayID, mode in
             DisplayConfiguration(displayID: displayID, mode: mode)
         }
 
-        var newPreset = ResolutionPreset(
+        let newPreset = ResolutionPreset(
             name: name,
             configurations: configurations,
             keyboardShortcut: keyboardShortcut
         )
 
-        // If editing, preserve the original ID
+        // When editing, remove the old record before handing the updated preset
+        // to the caller — the caller's onSave handler re-inserts it.
         if let existingPreset = preset {
-            newPreset = ResolutionPreset(
-                name: name,
-                configurations: configurations,
-                keyboardShortcut: keyboardShortcut
-            )
-            // We need to recreate with same ID - this is a workaround
             settingsManager.deletePreset(existingPreset)
         }
 
@@ -519,11 +515,19 @@ struct DisplayModeSelector: View {
 /// The general settings tab.
 ///
 /// Provides controls for launch at login and dock visibility preferences.
+/// In debug builds, an additional Developer section exposes convenience toggles
+/// that are never compiled into release builds.
 struct GeneralTab: View {
     let settingsManager: SettingsManager
 
     @State private var launchAtLogin = false
     @State private var showInDock = false
+
+    // Kept inside the view so the toggle stays reactive.
+    // Compiled away entirely in release builds.
+    #if DEBUG
+    @State private var forceOnboarding = DebugSettings.forceOnboarding
+    #endif
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
@@ -541,12 +545,45 @@ struct GeneralTab: View {
                     settingsManager.showInDock = newValue
                 }
 
+            // ── Developer section ─────────────────────────────────────────
+            // Visible only in Debug builds. The entire block is stripped by the
+            // compiler when building with the Release / Archive scheme.
+            #if DEBUG
+            Divider()
+
+            VStack(alignment: .leading, spacing: 8) {
+                Label("Developer", systemImage: "hammer.fill")
+                    .font(.headline)
+                    .foregroundStyle(.orange)
+
+                Text("These settings are only visible in Debug builds and are never shown to real users.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                Toggle("Always show onboarding at launch", isOn: $forceOnboarding)
+                    .onChange(of: forceOnboarding) { _, newValue in
+                        DebugSettings.forceOnboarding = newValue
+                    }
+                    .help("When enabled, the onboarding window is shown at every launch regardless of accessibility permission state. Relaunch the app to see the effect.")
+            }
+            .padding(12)
+            .background(Color.orange.opacity(0.06))
+            .clipShape(.rect(cornerRadius: 8))
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .strokeBorder(Color.orange.opacity(0.25), lineWidth: 1)
+            )
+            #endif
+
             Spacer()
         }
         .padding()
         .onAppear {
             launchAtLogin = settingsManager.launchAtLogin
             showInDock = settingsManager.showInDock
+            #if DEBUG
+            forceOnboarding = DebugSettings.forceOnboarding
+            #endif
         }
     }
 

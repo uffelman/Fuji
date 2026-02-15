@@ -1,47 +1,13 @@
 //
-//  Models.swift
+//  KeyboardShortcut.swift
 //  DisplayApp
 //
-//  Created by Stephen Uffelman on 1/24/26.
+//  Created by Stephen Uffelman on 2/15/26.
 //
 
-import Foundation
-import Carbon
 import AppKit
-
-/// Represents a display resolution configuration for a specific display.
-///
-/// Links a display (by ID) with a desired display mode. Used when saving and applying
-/// resolution presets that may affect multiple displays.
-struct DisplayConfiguration: Codable, Identifiable, Hashable {
-    let id: UUID
-    let displayID: UInt32
-    let mode: DisplayMode
-
-    init(displayID: CGDirectDisplayID, mode: DisplayMode) {
-        self.id = UUID()
-        self.displayID = displayID
-        self.mode = mode
-    }
-}
-
-/// A saved preset containing display configurations and an optional keyboard shortcut.
-///
-/// Presets allow users to quickly switch between predefined display arrangements.
-/// Each preset can configure one or more displays and be triggered via keyboard shortcut.
-struct ResolutionPreset: Codable, Identifiable {
-    let id: UUID
-    var name: String
-    var configurations: [DisplayConfiguration]
-    var keyboardShortcut: KeyboardShortcut?
-
-    init(name: String, configurations: [DisplayConfiguration], keyboardShortcut: KeyboardShortcut? = nil) {
-        self.id = UUID()
-        self.name = name
-        self.configurations = configurations
-        self.keyboardShortcut = keyboardShortcut
-    }
-}
+import Carbon
+import Foundation
 
 /// Represents a keyboard shortcut with key code and modifier keys.
 ///
@@ -129,3 +95,4 @@ struct KeyboardShortcut: Codable, Hashable, Equatable {
         return KeyboardShortcut(keyCode: UInt32(event.keyCode), modifiers: modifiers)
     }
 }
+

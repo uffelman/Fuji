@@ -8,7 +8,23 @@
 import Foundation
 import CoreGraphics
 
-extension ResolutionPreset {
+/// A saved preset containing display configurations and an optional keyboard shortcut.
+///
+/// Presets allow users to quickly switch between predefined display arrangements.
+/// Each preset can configure one or more displays and be triggered via keyboard shortcut.
+struct ResolutionPreset: Codable, Identifiable {
+    let id: UUID
+    var name: String
+    var configurations: [DisplayConfiguration]
+    var keyboardShortcut: KeyboardShortcut?
+
+    init(name: String, configurations: [DisplayConfiguration], keyboardShortcut: KeyboardShortcut? = nil) {
+        self.id = UUID()
+        self.name = name
+        self.configurations = configurations
+        self.keyboardShortcut = keyboardShortcut
+    }
+
     /// Intelligently matches stored display configurations to current displays.
     ///
     /// This method handles cases where display IDs change after system restart by attempting
