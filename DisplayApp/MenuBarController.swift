@@ -81,6 +81,14 @@ final class MenuBarController: NSObject {
                     presetItem.toolTip = "Shortcut: \(shortcut.displayString)"
                 }
 
+                // Show ratio badges for each configuration's resolution
+                let ratioLabels = preset.configurations.compactMap {
+                    $0.mode.aspectRatioLabel
+                }
+                applyInlineRatioBadge(
+                    to: presetItem, title: preset.name,
+                    font: NSFont.menuFont(ofSize: 0), ratioLabels: ratioLabels)
+
                 menu.addItem(presetItem)
             }
         }
@@ -195,15 +203,13 @@ final class MenuBarController: NSObject {
                     resSubmenu.addItem(modeItem)
                 }
 
-                // Style the default resolution item
-                if containsDefault {
-                    resItem.attributedTitle = NSAttributedString(
-                        string: resTitle,
-                        attributes: [
-                            .font: NSFont.systemFont(ofSize: 13, weight: .medium)
-                        ]
-                    )
-                }
+                // Style the resolution group header with optional ratio badge
+                let ratioLabels = [modes.first?.aspectRatioLabel].compactMap { $0 }
+                let font: NSFont = containsDefault
+                    ? .systemFont(ofSize: 13, weight: .medium)
+                    : .menuFont(ofSize: 0)
+                applyInlineRatioBadge(
+                    to: resItem, title: resTitle, font: font, ratioLabels: ratioLabels)
 
                 resItem.submenu = resSubmenu
                 resolutionsSubmenu.addItem(resItem)
@@ -248,15 +254,13 @@ final class MenuBarController: NSObject {
             item.state = .on
         }
 
-        // Style the default mode item differently
-        if isDefault {
-            item.attributedTitle = NSAttributedString(
-                string: title,
-                attributes: [
-                    .font: NSFont.systemFont(ofSize: 13, weight: .medium)
-                ]
-            )
-        }
+        // Build title with optional inline ratio badge (preserves native checkmark/chevron)
+        let font: NSFont = isDefault
+            ? .systemFont(ofSize: 13, weight: .medium)
+            : .menuFont(ofSize: 0)
+        let ratioLabels = [mode.aspectRatioLabel].compactMap { $0 }
+        applyInlineRatioBadge(
+            to: item, title: title, font: font, ratioLabels: ratioLabels)
 
         return item
     }
@@ -367,6 +371,65 @@ final class MenuBarController: NSObject {
     /// Terminates the application.
     @objc private func quitApp() {
         NSApp.terminate(nil)
+    }
+
+    /// Applies aspect ratio badge(s) to a menu item as an inline attributed title.
+    ///
+    /// Uses NSTextAttachment to append badge images after the title text.
+    /// This preserves native NSMenuItem behavior (checkmarks, submenu chevrons).
+    ///
+    /// - Parameters:
+    ///   - item: The menu item to configure
+    ///   - title: The title text
+    ///   - font: The font to use for the title
+    ///   - ratioLabels: The ratio label strings (e.g. ["16:9"]), empty to skip badges
+    private func applyInlineRatioBadge(
+        to item: NSMenuItem, title: String, font: NSFont,
+        ratioLabels: [String]
+    ) {
+        let result = NSMutableAttributedString(
+            string: title, attributes: [.font: font])
+        for label in ratioLabels {
+            let badgeImage = createRatioBadgeImage(text: label)
+            let attachment = NSTextAttachment()
+            attachment.image = badgeImage
+            let yOffset = (font.pointSize - badgeImage.size.height) / 2 - 1
+            attachment.bounds = NSRect(
+                x: 0, y: yOffset,
+                width: badgeImage.size.width, height: badgeImage.size.height)
+            result.append(NSAttributedString(string: "  "))
+            result.append(NSAttributedString(attachment: attachment))
+        }
+        item.attributedTitle = result
+    }
+
+    /// Creates an NSImage of a small round-rect badge containing the given text.
+    private func createRatioBadgeImage(text: String, fontSize: CGFloat = 9) -> NSImage {
+        let font = NSFont.systemFont(ofSize: fontSize, weight: .medium)
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: font,
+            .foregroundColor: NSColor.secondaryLabelColor,
+        ]
+        let textSize = (text as NSString).size(withAttributes: attributes)
+        let hPadding: CGFloat = 5
+        let vPadding: CGFloat = 1.5
+        let badgeSize = NSSize(
+            width: textSize.width + hPadding * 2,
+            height: textSize.height + vPadding * 2)
+
+        let image = NSImage(size: badgeSize, flipped: false) { rect in
+            let path = NSBezierPath(
+                roundedRect: rect.insetBy(dx: 0.5, dy: 0.5), xRadius: 4, yRadius: 4)
+            NSColor.secondaryLabelColor.withAlphaComponent(0.15).setFill()
+            path.fill()
+            let textRect = NSRect(
+                x: hPadding, y: vPadding,
+                width: textSize.width, height: textSize.height)
+            (text as NSString).draw(in: textRect, withAttributes: attributes)
+            return true
+        }
+        image.isTemplate = false
+        return image
     }
 
     /// Displays an alert dialog with the given title and message.
