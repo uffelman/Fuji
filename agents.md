@@ -2,6 +2,8 @@
 
 This repository contains an Xcode project written with Swift and SwiftUI. Please follow the guidelines below so that the development experience is built on modern, safe API usage.
 
+See `CLAUDE.md` for project-level context (what the app does, file map, architecture, key technical details).
+
 
 ## Role
 
