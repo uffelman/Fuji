@@ -630,6 +630,22 @@ final class DisplayManager {
         return true
     }
 
+    /// Resets all connected displays to their default resolutions atomically.
+    ///
+    /// For each display that has a known default mode, this method builds a list of
+    /// configurations and applies them in a single transaction.
+    ///
+    /// - Returns: `true` if all resets were successful, `false` if any failed or no defaults were found
+    func resetAllToDefault() -> Bool {
+        let configurations = displays.compactMap { display -> (displayID: CGDirectDisplayID, mode: DisplayMode)? in
+            guard let defaultMode = display.defaultMode else { return nil }
+            return (display.id, defaultMode)
+        }
+
+        guard !configurations.isEmpty else { return false }
+        return setMultipleDisplayModes(configurations)
+    }
+
     /// Registers a callback to monitor display configuration changes.
     ///
     /// This method sets up system-level notifications for display events including

@@ -101,6 +101,12 @@ final class MenuBarController: NSObject {
         refreshItem.target = self
         menu.addItem(refreshItem)
 
+        // Reset to default
+        let resetItem = NSMenuItem(
+            title: "Reset to Default", action: #selector(resetToDefault), keyEquivalent: "")
+        resetItem.target = self
+        menu.addItem(resetItem)
+
         menu.addItem(NSMenuItem.separator())
 
         // Settings
@@ -330,6 +336,19 @@ final class MenuBarController: NSObject {
     @objc private func refreshDisplays() {
         displayManager.refreshDisplays()
         rebuildMenu()
+    }
+
+    /// Resets all displays to their default resolutions.
+    @objc private func resetToDefault() {
+        let success = displayManager.resetAllToDefault()
+        if success {
+            rebuildMenu()
+        } else {
+            showAlert(
+                title: "Failed to Reset Displays",
+                message: "Could not reset displays to their default resolutions."
+            )
+        }
     }
 
     /// Opens the settings window.
