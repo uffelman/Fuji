@@ -330,7 +330,6 @@ final class MenuBarController: NSObject {
 
     /// Opens the settings window.
     @objc private func openSettings() {
-        NSApp.activate(ignoringOtherApps: true)
         // Use the legacy window approach since SwiftUI Settings scene
         // cannot be opened reliably from outside SwiftUI
         openSettingsWindowLegacy()
@@ -361,8 +360,8 @@ final class MenuBarController: NSObject {
             settingsWindow?.isReleasedWhenClosed = false
         }
 
-        settingsWindow?.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
+        settingsWindow?.makeKeyAndOrderFront(nil)
     }
 
     /// Terminates the application.
