@@ -31,6 +31,9 @@ DisplayApp/
 ├── SettingsView.swift               Settings window (tabs: presets, general, about)
 ├── KeyboardShortcut.swift           Value type: Carbon keycode + modifier flags
 ├── KeyboardShortcutManager.swift    Carbon hotkey registration + ShortcutRecorder
+├── ResolutionOverlayController.swift HUD overlay window for resolution change feedback
+├── ResolutionOverlayView.swift      SwiftUI content view for the resolution overlay
+├── VisualEffectBackground.swift     NSViewRepresentable for NSVisualEffectView materials
 ├── OnboardingView.swift             Two-page SwiftUI onboarding flow
 ├── OnboardingWindowController.swift Floating NSWindow hosting onboarding
 ├── PermissionsManager.swift         AXIsProcessTrusted polling + protocol + mock

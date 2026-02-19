@@ -143,7 +143,16 @@ final class KeyboardShortcutManager {
 
         let success = displayManager.setMultipleDisplayModes(configurations)
         if success {
-            showNotification(title: "Resolution Changed", message: "Applied preset: \(preset.name)")
+            let overlayLines = configurations.compactMap { config -> OverlayLine? in
+                guard let display = displayManager.displays.first(where: { $0.id == config.displayID }) else {
+                    return nil
+                }
+                return OverlayLine(displayName: display.name, resolution: config.mode.displayString)
+            }
+            ResolutionOverlayController.shared.show(
+                presetName: preset.name,
+                configurations: overlayLines
+            )
         } else {
             showNotification(
                 title: "Failed to Apply Preset",

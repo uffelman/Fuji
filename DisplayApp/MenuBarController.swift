@@ -287,6 +287,12 @@ final class MenuBarController: NSObject {
             let success = displayManager.setDisplayMode(mode, for: displayID)
             if success {
                 rebuildMenu()
+                if let display = displayManager.displays.first(where: { $0.id == displayID }) {
+                    ResolutionOverlayController.shared.show(
+                        displayName: display.name,
+                        resolution: mode.displayString
+                    )
+                }
             } else {
                 showAlert(
                     title: "Failed to Change Resolution",
@@ -322,6 +328,16 @@ final class MenuBarController: NSObject {
             let success = displayManager.setMultipleDisplayModes(configurations)
             if success {
                 rebuildMenu()
+                let overlayLines = configurations.compactMap { config -> OverlayLine? in
+                    guard let display = displayManager.displays.first(where: { $0.id == config.displayID }) else {
+                        return nil
+                    }
+                    return OverlayLine(displayName: display.name, resolution: config.mode.displayString)
+                }
+                ResolutionOverlayController.shared.show(
+                    presetName: preset.name,
+                    configurations: overlayLines
+                )
             } else {
                 showAlert(
                     title: "Failed to Apply Preset",
@@ -343,6 +359,14 @@ final class MenuBarController: NSObject {
         let success = displayManager.resetAllToDefault()
         if success {
             rebuildMenu()
+            let overlayLines = displayManager.displays.compactMap { display -> OverlayLine? in
+                guard let defaultMode = display.defaultMode else { return nil }
+                return OverlayLine(displayName: display.name, resolution: defaultMode.displayString)
+            }
+            ResolutionOverlayController.shared.show(
+                presetName: "Reset to Default",
+                configurations: overlayLines
+            )
         } else {
             showAlert(
                 title: "Failed to Reset Displays",
