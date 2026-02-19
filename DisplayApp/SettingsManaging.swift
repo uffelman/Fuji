@@ -9,15 +9,28 @@ import AppKit
 import Foundation
 import SwiftUI
 
+protocol SettingsManaging: AnyObject {
+    
+    var launchAtLogin: Bool { get set }
+    var presets: [ResolutionPreset] { get }
+    var showInDock: Bool { get set }
+    
+    func addPreset(_ preset: ResolutionPreset)
+    func updatePreset(_ preset: ResolutionPreset)
+    func deletePreset(_ preset: ResolutionPreset)
+    func deletePreset(at offsets: IndexSet)
+    func movePreset(from source: IndexSet, to destination: Int)
+    func preset(for shortcut: KeyboardShortcut) -> ResolutionPreset?
+}
+
 /// Manages app settings and resolution presets.
 ///
 /// This class handles persistence of user preferences including resolution presets,
 /// launch at login settings, and dock visibility. Settings are stored using UserDefaults.
 @MainActor
 @Observable
-final class SettingsManager {
-    static let shared = SettingsManager()
-
+final class SettingsManager: SettingsManaging {
+    
     private let presetsKey = "displayPresets"
     private let launchAtLoginKey = "launchAtLogin"
     private let showInDockKey = "showInDock"
@@ -127,4 +140,22 @@ final class SettingsManager {
             NSApplication.shared.setActivationPolicy(.accessory)
         }
     }
+}
+
+class MockSettingsManager: SettingsManaging {
+    var presets: [ResolutionPreset] = []
+    var launchAtLogin = false
+    var showInDock = false
+    
+    func addPreset(_ preset: ResolutionPreset) {}
+    
+    func updatePreset(_ preset: ResolutionPreset) {}
+    
+    func deletePreset(_ preset: ResolutionPreset) {}
+    
+    func deletePreset(at offsets: IndexSet) {}
+    
+    func movePreset(from source: IndexSet, to destination: Int) {}
+    
+    func preset(for shortcut: KeyboardShortcut) -> ResolutionPreset? { nil }
 }

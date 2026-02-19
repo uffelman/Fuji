@@ -18,10 +18,10 @@ final class MenuBarController: NSObject {
     private var statusItem: NSStatusItem!
     private var menu: NSMenu!
     private let displayManager: DisplayManager
-    private let settingsManager: SettingsManager
+    private let settingsManager: any SettingsManaging
     private var settingsWindow: NSWindow?
 
-    init(displayManager: DisplayManager, settingsManager: SettingsManager) {
+    init(displayManager: DisplayManager, settingsManager: any SettingsManaging) {
         self.displayManager = displayManager
         self.settingsManager = settingsManager
         super.init()

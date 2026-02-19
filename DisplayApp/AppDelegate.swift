@@ -14,12 +14,11 @@ import Foundation
 /// app lifecycle events including launch-time initialization and accessibility permissions.
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    private var menuBarController: MenuBarController!
-    private var keyboardShortcutManager: KeyboardShortcutManager!
-    private let displayManager = DisplayManager.shared
-    private let settingsManager = SettingsManager.shared
-    private let permissionsManager = PermissionsManager()
-    private lazy var onboardingController = OnboardingWindowController(permissions: permissionsManager)
+    var keyboardShortcutManager: KeyboardShortcutManager!
+    var menuBarController: MenuBarController!
+    var onboardingWindowController: OnboardingWindowController!
+    var permissionsManager: PermissionsManager!
+    var settingsManager: SettingsManaging!
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Hide dock icon by default (menu bar app)
@@ -42,7 +41,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if forceOnboarding || !permissionsManager.isAccessibilityTrusted {
             // Full welcome flow when force-enabled so the developer can preview both pages;
             // permissions-only page when triggered naturally by missing access.
-            onboardingController.show(startOnPage: forceOnboarding ? 0 : 1)
+            onboardingWindowController.show(startOnPage: forceOnboarding ? 0 : 1)
         }
         #else
         if !permissionsManager.isAccessibilityTrusted {
@@ -50,18 +49,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         #endif
 
-        // Initialize menu bar controller
-        menuBarController = MenuBarController(
-            displayManager: displayManager,
-            settingsManager: settingsManager
-        )
-
-        // Initialize keyboard shortcut manager
-        keyboardShortcutManager = KeyboardShortcutManager(
-            displayManager: displayManager,
-            settingsManager: settingsManager,
-            permissionsManager: permissionsManager
-        )
+        
 
         // Register existing shortcuts with a slight delay to ensure system is ready
         // This is especially important when the app launches at login

@@ -22,7 +22,7 @@ final class KeyboardShortcutManager {
     private var nextHotKeyID: UInt32 = 1
 
     private let displayManager: DisplayManager
-    private let settingsManager: SettingsManager
+    private let settingsManager: any SettingsManaging
     private let permissionsManager: any PermissionsManaging
 
     var onShortcutTriggered: ((ResolutionPreset) -> Void)?
@@ -31,7 +31,11 @@ final class KeyboardShortcutManager {
         return registeredHotKeys.count
     }
 
-    init(displayManager: DisplayManager, settingsManager: SettingsManager, permissionsManager: any PermissionsManaging) {
+    init(
+        displayManager: DisplayManager,
+        settingsManager: any SettingsManaging,
+        permissionsManager: any PermissionsManaging
+    ) {
         self.displayManager = displayManager
         self.settingsManager = settingsManager
         self.permissionsManager = permissionsManager

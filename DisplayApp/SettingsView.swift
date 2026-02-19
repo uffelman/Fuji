@@ -13,32 +13,109 @@ import SwiftUI
 ///
 /// Displays a tab-based interface with sections for managing presets, general settings, and app information.
 struct SettingsView: View {
-    let displayManager: DisplayManager
-    let settingsManager: SettingsManager
-    let onPresetsChanged: () -> Void
+    let displayManager: any DisplayManaging
+    let settingsManager: any SettingsManaging
+    let onPresetsChanged: (() -> Void)?
 
-    @State private var selectedTab = 0
+    @State private var selectedTab = SettingsTab.presets
+    @Namespace private var tabAnimation
 
     var body: some View {
-        TabView(selection: $selectedTab) {
-            Tab("Presets", systemImage: "rectangle.stack", value: 0) {
-                PresetsTab(
-                    displayManager: displayManager,
-                    settingsManager: settingsManager,
-                    onPresetsChanged: onPresetsChanged
-                )
+        VStack(spacing: 0) {
+            // Custom tab bar — animation scoped here so only the pill slides,
+            // not the tab content below.
+            HStack(spacing: 0) {
+                ForEach(SettingsTab.allCases, id: \.self) { tab in
+                    SettingsTabButton(
+                        tab: tab,
+                        isSelected: selectedTab == tab,
+                        namespace: tabAnimation
+                    ) {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
+                            selectedTab = tab
+                        }
+                    }
+                }
             }
+            .padding(3)
+            .background(Color(.separatorColor).opacity(0.3))
+            .clipShape(.rect(cornerRadius: 9))
+            .padding(.top, 16)
+            .padding(.bottom, 8)
 
-            Tab("General", systemImage: "gear", value: 1) {
-                GeneralTab(settingsManager: settingsManager)
+            // Tab content — no animation here to avoid content flicker.
+            Group {
+                switch selectedTab {
+                case .presets:
+                    PresetsTab(
+                        displayManager: displayManager,
+                        settingsManager: settingsManager,
+                        onPresetsChanged: onPresetsChanged
+                    )
+                case .general:
+                    GeneralTab(settingsManager: settingsManager)
+                case .about:
+                    AboutTab()
+                }
             }
-
-            Tab("About", systemImage: "info.circle", value: 2) {
-                AboutTab()
-            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .padding()
+        .padding(.horizontal)
+        .padding(.bottom)
         .frame(minWidth: 500, minHeight: 400)
+    }
+}
+
+/// A single button in the custom settings tab bar.
+struct SettingsTabButton: View {
+    let tab: SettingsTab
+    let isSelected: Bool
+    let namespace: Namespace.ID
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                Image(systemName: tab.icon)
+                    .font(.system(size: 12))
+                Text(tab.title)
+                    .font(.system(size: 13, weight: .medium))
+            }
+            .padding(.horizontal, 18)
+            .padding(.vertical, 5)
+            .foregroundStyle(isSelected ? .primary : .secondary)
+            .background {
+                if isSelected {
+                    RoundedRectangle(cornerRadius: 7)
+                        .fill(Color(.windowBackgroundColor))
+                        .shadow(color: .primary.opacity(0.08), radius: 2, y: 1)
+                        .matchedGeometryEffect(id: "activeTab", in: namespace)
+                }
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+/// Identifies the settings tabs.
+enum SettingsTab: Int, CaseIterable {
+    case presets, general, about
+
+    var title: String {
+        switch self {
+        case .presets: "Presets"
+        case .general: "General"
+        case .about: "About"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .presets: "list.bullet.rectangle"
+        case .general: "gearshape"
+        case .about: "info.circle"
+        }
     }
 }
 
@@ -47,24 +124,26 @@ struct SettingsView: View {
 /// Allows users to create, edit, delete, and reorder resolution presets.
 /// Shows warnings when accessibility permissions are not granted.
 struct PresetsTab: View {
-    let displayManager: DisplayManager
-    let settingsManager: SettingsManager
-    let onPresetsChanged: () -> Void
+    let displayManager: any DisplayManaging
+    let settingsManager: any SettingsManaging
+    let onPresetsChanged: (() -> Void)?
 
     @State private var showingAddPreset = false
     @State private var editingPreset: ResolutionPreset?
     @State private var hasAccessibilityPermission = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Resolution Presets")
-                .font(.headline)
+        VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Resolution Presets")
+                    .font(.system(size: 15, weight: .semibold))
 
-            Text(
-                "Create presets to quickly switch between resolution configurations. Assign keyboard shortcuts for instant switching."
-            )
-            .font(.subheadline)
-            .foregroundStyle(.secondary)
+                Text(
+                    "Quick-switch between display configurations using keyboard shortcuts."
+                )
+                .font(.system(size: 12))
+                .foregroundStyle(.secondary)
+            }
 
             if !hasAccessibilityPermission {
                 AccessibilityPermissionWarning {
@@ -85,8 +164,8 @@ struct PresetsTab: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                List {
-                    ForEach(settingsManager.presets) { preset in
+                VStack(spacing: 0) {
+                    ForEach(settingsManager.presets.enumerated(), id: \.element.id) { index, preset in
                         PresetRow(
                             preset: preset,
                             onEdit: {
@@ -94,24 +173,22 @@ struct PresetsTab: View {
                             },
                             onDelete: {
                                 settingsManager.deletePreset(preset)
-                                onPresetsChanged()
+                                onPresetsChanged?()
                             })
-                    }
-                    .onMove { source, destination in
-                        settingsManager.movePreset(from: source, to: destination)
-                        onPresetsChanged()
+
+                        if index < settingsManager.presets.count - 1 {
+                            Divider()
+                        }
                     }
                 }
-                .listStyle(.bordered)
+                .background(Color(.controlBackgroundColor))
+                .clipShape(.rect(cornerRadius: 10))
             }
 
-            HStack {
-                Button(action: { showingAddPreset = true }) {
-                    Label("Add Preset", systemImage: "plus")
-                }
-
-                Spacer()
+            Button(action: { showingAddPreset = true }) {
+                Label("Add Preset", systemImage: "plus")
             }
+            .buttonStyle(.bordered)
         }
         .padding()
         .sheet(isPresented: $showingAddPreset) {
@@ -121,7 +198,7 @@ struct PresetsTab: View {
                 preset: nil,
                 onSave: { preset in
                     settingsManager.addPreset(preset)
-                    onPresetsChanged()
+                    onPresetsChanged?()
                 }
             )
         }
@@ -132,7 +209,7 @@ struct PresetsTab: View {
                 preset: preset,
                 onSave: { updatedPreset in
                     settingsManager.updatePreset(updatedPreset)
-                    onPresetsChanged()
+                    onPresetsChanged?()
                 }
             )
         }
@@ -209,13 +286,13 @@ struct PresetRow: View {
     let onDelete: () -> Void
 
     var body: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
+        HStack(spacing: 8) {
+            VStack(alignment: .leading, spacing: 1) {
                 Text(preset.name)
-                    .font(.headline)
+                    .font(.system(size: 13.5, weight: .medium))
 
                 Text(configurationSummary)
-                    .font(.caption)
+                    .font(.system(size: 11.5).monospacedDigit())
                     .foregroundStyle(.secondary)
             }
 
@@ -223,30 +300,38 @@ struct PresetRow: View {
 
             if let shortcut = preset.keyboardShortcut {
                 Text(shortcut.displayString)
-                    .font(.system(.body, design: .monospaced))
+                    .font(.system(size: 11, design: .monospaced))
                     .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color.secondary.opacity(0.2))
-                    .clipShape(.rect(cornerRadius: 4))
+                    .padding(.vertical, 3)
+                    .background(Color(.separatorColor).opacity(0.3))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 5)
+                            .stroke(Color(.separatorColor), lineWidth: 1)
+                    )
+                    .clipShape(.rect(cornerRadius: 5))
             }
 
             Button("Edit", systemImage: "pencil", action: onEdit)
-                .buttonStyle(.borderless)
+                .buttonStyle(.plain)
                 .labelStyle(.iconOnly)
+                .foregroundStyle(.tertiary)
 
             Button("Delete", systemImage: "trash", action: onDelete)
-                .buttonStyle(.borderless)
-                .foregroundStyle(.red)
+                .buttonStyle(.plain)
                 .labelStyle(.iconOnly)
+                .foregroundStyle(Color(.systemRed).opacity(0.7))
         }
-        .padding(.vertical, 4)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
     }
 
     /// Generates a comma-separated summary of the preset's display configurations.
     private var configurationSummary: String {
-        preset.configurations.map { config in
-            "\(config.mode.shortDisplayString)"
-        }.joined(separator: ", ")
+        let details = preset.configurations.map { config in
+            let hiDPI = config.mode.isHiDPI ? "HiDPI" : "Standard"
+            return "\(hiDPI) · \(config.mode.shortDisplayString)"
+        }
+        return details.joined(separator: ", ")
     }
 }
 
@@ -256,8 +341,8 @@ struct PresetRow: View {
 /// and optionally recording a keyboard shortcut. Supports both creating new presets and
 /// editing existing ones.
 struct PresetEditorSheet: View {
-    let displayManager: DisplayManager
-    let settingsManager: SettingsManager
+    let displayManager: any DisplayManaging
+    let settingsManager: any SettingsManaging
     let preset: ResolutionPreset?
     let onSave: (ResolutionPreset) -> Void
 
@@ -512,125 +597,106 @@ struct DisplayModeSelector: View {
     }
 }
 
-/// The general settings tab.
+
+
+/// The about tab showing app information.
 ///
-/// Provides controls for launch at login and dock visibility preferences.
-/// In debug builds, an additional Developer section exposes convenience toggles
-/// that are never compiled into release builds.
-struct GeneralTab: View {
-    let settingsManager: SettingsManager
+/// Displays the app name, version, icon, build number, and description,
+/// along with metadata and link buttons.
+struct AboutTab: View {
+    private var appVersion: String {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+    }
 
-    @State private var launchAtLogin = false
-    @State private var showInDock = false
-
-    // Kept inside the view so the toggle stays reactive.
-    // Compiled away entirely in release builds.
-    #if DEBUG
-    @State private var forceOnboarding = DebugSettings.forceOnboarding
-    #endif
+    private var buildNumber: String {
+        Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
+    }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            Text("General Settings")
-                .font(.headline)
+        VStack(spacing: 0) {
+            // App icon
+            Image(nsImage: NSApp.applicationIconImage)
+                .resizable()
+                .frame(width: 80, height: 80)
+                .clipShape(.rect(cornerRadius: 18))
+                .shadow(color: .accentColor.opacity(0.2), radius: 10, y: 4)
+                .padding(.bottom, 14)
 
-            Toggle("Launch at Login", isOn: $launchAtLogin)
-                .onChange(of: launchAtLogin) { _, newValue in
-                    settingsManager.launchAtLogin = newValue
-                    updateLaunchAtLogin(enabled: newValue)
-                }
+            // App name
+            Text("DisplayApp")
+                .font(.system(size: 20, weight: .bold))
+                .padding(.bottom, 4)
 
-            Toggle("Show in Dock", isOn: $showInDock)
-                .onChange(of: showInDock) { _, newValue in
-                    settingsManager.showInDock = newValue
-                }
+            // Version + build
+            Text("Version \(appVersion) (Build \(buildNumber))")
+                .font(.system(size: 12))
+                .foregroundStyle(.secondary)
+                .padding(.bottom, 10)
 
-            // ── Developer section ─────────────────────────────────────────
-            // Visible only in Debug builds. The entire block is stripped by the
-            // compiler when building with the Release / Archive scheme.
-            #if DEBUG
+            // Description
+            Text("A lightweight menu bar utility for instantly switching display resolutions on macOS.")
+                .font(.system(size: 13))
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: 320)
+                .padding(.bottom, 20)
+
+            // Divider
             Divider()
+                .padding(.bottom, 16)
 
-            VStack(alignment: .leading, spacing: 8) {
-                Label("Developer", systemImage: "hammer.fill")
-                    .font(.headline)
-                    .foregroundStyle(.orange)
-
-                Text("These settings are only visible in Debug builds and are never shown to real users.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-
-                Toggle("Always show onboarding at launch", isOn: $forceOnboarding)
-                    .onChange(of: forceOnboarding) { _, newValue in
-                        DebugSettings.forceOnboarding = newValue
-                    }
-                    .help("When enabled, the onboarding window is shown at every launch regardless of accessibility permission state. Relaunch the app to see the effect.")
+            // Metadata grid
+            Grid(alignment: .leading, horizontalSpacing: 24, verticalSpacing: 10) {
+                GridRow {
+                    AboutMetaItem(label: "Developer", value: "Stephen Uffelman")
+                    AboutMetaItem(label: "License", value: "Single User")
+                }
+                GridRow {
+                    AboutMetaItem(label: "macOS", value: "14.0+ Required")
+                    AboutMetaItem(label: "Framework", value: "SwiftUI")
+                }
             }
-            .padding(12)
-            .background(Color.orange.opacity(0.06))
-            .clipShape(.rect(cornerRadius: 8))
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .strokeBorder(Color.orange.opacity(0.25), lineWidth: 1)
-            )
-            #endif
+            .padding(.bottom, 20)
+
+            // Link buttons
+            HStack(spacing: 10) {
+                Button("Acknowledgements") {}
+                    .buttonStyle(.bordered)
+                    .tint(.accentColor)
+
+                Button("Privacy Policy") {}
+                    .buttonStyle(.bordered)
+                    .tint(.accentColor)
+            }
 
             Spacer()
         }
-        .padding()
-        .onAppear {
-            launchAtLogin = settingsManager.launchAtLogin
-            showInDock = settingsManager.showInDock
-            #if DEBUG
-            forceOnboarding = DebugSettings.forceOnboarding
-            #endif
-        }
+        .padding(.top, 12)
+        .padding(.bottom, 8)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
+}
 
-    /// Registers or unregisters the app to launch at login using SMAppService.
-    ///
-    /// - Parameter enabled: Whether to enable or disable launch at login
-    private func updateLaunchAtLogin(enabled: Bool) {
-        // Use SMAppService for modern macOS launch at login
-        if #available(macOS 13.0, *) {
-            do {
-                if enabled {
-                    try SMAppService.mainApp.register()
-                } else {
-                    try SMAppService.mainApp.unregister()
-                }
-            } catch {
-                print("Failed to update launch at login: \(error)")
-            }
+/// A single metadata item for the About tab's info grid.
+struct AboutMetaItem: View {
+    let label: String
+    let value: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(label)
+                .font(.system(size: 10.5, weight: .semibold).smallCaps())
+                .foregroundStyle(.secondary)
+            Text(value)
+                .font(.system(size: 13))
         }
     }
 }
 
-/// The about tab showing app information.
-///
-/// Displays the app name, version, icon, and description.
-struct AboutTab: View {
-    var body: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "display")
-                .font(.largeTitle)
-                .foregroundStyle(Color.accentColor)
-
-            Text("DisplayApp")
-                .font(.title)
-                .bold()
-
-            Text("Version 1.0")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-
-            Text("A simple menu bar app for managing display resolutions on macOS.")
-                .multilineTextAlignment(.center)
-                .foregroundStyle(.secondary)
-
-            Spacer()
-        }
-        .padding()
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
+#Preview {
+    SettingsView(
+        displayManager: MockDisplayManager(),
+        settingsManager: MockSettingsManager(),
+        onPresetsChanged: nil
+    )
 }
