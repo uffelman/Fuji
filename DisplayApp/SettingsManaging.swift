@@ -14,6 +14,7 @@ protocol SettingsManaging: AnyObject {
     var launchAtLogin: Bool { get set }
     var presets: [ResolutionPreset] { get }
     var showInDock: Bool { get set }
+    var showResolutionOverlay: Bool { get set }
     
     func addPreset(_ preset: ResolutionPreset)
     func updatePreset(_ preset: ResolutionPreset)
@@ -34,6 +35,7 @@ final class SettingsManager: SettingsManaging {
     private let presetsKey = "displayPresets"
     private let launchAtLoginKey = "launchAtLogin"
     private let showInDockKey = "showInDock"
+    private let showResolutionOverlayKey = "showResolutionOverlay"
 
     private(set) var presets: [ResolutionPreset] = []
 
@@ -47,6 +49,13 @@ final class SettingsManager: SettingsManaging {
         set {
             UserDefaults.standard.set(newValue, forKey: showInDockKey)
             updateDockVisibility()
+        }
+    }
+    
+    var showResolutionOverlay: Bool {
+        get { UserDefaults.standard.bool(forKey: showResolutionOverlayKey) }
+        set {
+            UserDefaults.standard.set(newValue, forKey: showResolutionOverlayKey)
         }
     }
 
@@ -148,6 +157,7 @@ final class MockSettingsManager: SettingsManaging {
     var presets: [ResolutionPreset] = []
     var launchAtLogin = false
     var showInDock = false
+    var showResolutionOverlay = true
     
     func addPreset(_ preset: ResolutionPreset) {}
     

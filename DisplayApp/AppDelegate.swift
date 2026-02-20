@@ -20,19 +20,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     var permissionsManager: PermissionsManager!
     var settingsManager: SettingsManaging!
     private var onboardingWindowController: OnboardingWindowController!
+    private var resolutionOverlayController: ResolutionOverlayController!
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         guard !ProcessInfo.processInfo.isSwiftUIPreview else { return }
         
+        resolutionOverlayController = ResolutionOverlayController(settingsManager: settingsManager)
+        
         keyboardShortcutManager = KeyboardShortcutManager(
             displayManager: displayManager,
             settingsManager: settingsManager,
-            permissionsManager: permissionsManager
+            permissionsManager: permissionsManager,
+            resolutionOverlayController: resolutionOverlayController
         )
         
         menuBarController = MenuBarController(
             displayManager: displayManager,
-            settingsManager: settingsManager
+            settingsManager: settingsManager,
+            resolutionOverlayController: resolutionOverlayController
         )
         
         onboardingWindowController = OnboardingWindowController(permissions: permissionsManager)

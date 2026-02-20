@@ -20,10 +20,16 @@ final class MenuBarController: NSObject {
     private let displayManager: DisplayManager
     private let settingsManager: any SettingsManaging
     private var settingsWindow: NSWindow?
+    private let resolutionOverlayController: ResolutionOverlayController
 
-    init(displayManager: DisplayManager, settingsManager: any SettingsManaging) {
+    init(
+        displayManager: DisplayManager,
+        settingsManager: any SettingsManaging,
+        resolutionOverlayController: ResolutionOverlayController
+    ) {
         self.displayManager = displayManager
         self.settingsManager = settingsManager
+        self.resolutionOverlayController = resolutionOverlayController
         super.init()
         setupStatusItem()
     }
@@ -288,7 +294,7 @@ final class MenuBarController: NSObject {
             if success {
                 rebuildMenu()
                 if let display = displayManager.displays.first(where: { $0.id == displayID }) {
-                    ResolutionOverlayController.shared.show(
+                    resolutionOverlayController.show(
                         displayName: display.name,
                         resolution: mode.displayString
                     )
@@ -334,7 +340,7 @@ final class MenuBarController: NSObject {
                     }
                     return OverlayLine(displayName: display.name, resolution: config.mode.displayString)
                 }
-                ResolutionOverlayController.shared.show(
+                resolutionOverlayController.show(
                     presetName: preset.name,
                     configurations: overlayLines
                 )
@@ -363,7 +369,7 @@ final class MenuBarController: NSObject {
                 guard let defaultMode = display.defaultMode else { return nil }
                 return OverlayLine(displayName: display.name, resolution: defaultMode.displayString)
             }
-            ResolutionOverlayController.shared.show(
+            resolutionOverlayController.show(
                 presetName: "Reset to Default",
                 configurations: overlayLines
             )

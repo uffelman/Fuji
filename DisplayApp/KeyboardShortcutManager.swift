@@ -24,6 +24,7 @@ final class KeyboardShortcutManager {
     private let displayManager: DisplayManager
     private let settingsManager: any SettingsManaging
     private let permissionsManager: any PermissionsManaging
+    private let resolutionOverlayController: ResolutionOverlayController
 
     var onShortcutTriggered: ((ResolutionPreset) -> Void)?
     
@@ -34,11 +35,13 @@ final class KeyboardShortcutManager {
     init(
         displayManager: DisplayManager,
         settingsManager: any SettingsManaging,
-        permissionsManager: any PermissionsManaging
+        permissionsManager: any PermissionsManaging,
+        resolutionOverlayController: ResolutionOverlayController
     ) {
         self.displayManager = displayManager
         self.settingsManager = settingsManager
         self.permissionsManager = permissionsManager
+        self.resolutionOverlayController = resolutionOverlayController
         setupEventHandler()
         requestNotificationPermission()
     }
@@ -153,7 +156,7 @@ final class KeyboardShortcutManager {
                 }
                 return OverlayLine(displayName: display.name, resolution: config.mode.displayString)
             }
-            ResolutionOverlayController.shared.show(
+            resolutionOverlayController.show(
                 presetName: preset.name,
                 configurations: overlayLines
             )

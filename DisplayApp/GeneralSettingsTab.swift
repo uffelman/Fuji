@@ -19,6 +19,7 @@ struct GeneralSettingsTab: View {
 
     @State private var launchAtLogin = false
     @State private var showInDock = false
+    @State private var showResolutionOverlay = true
 
     // Kept inside the view so the toggle stays reactive.
     // Compiled away entirely in release builds.
@@ -34,6 +35,16 @@ struct GeneralSettingsTab: View {
             // Settings card
             VStack(spacing: 0) {
                 SettingsFormRow(
+                    label: "Show overlay when switching resolutions",
+                    isOn: $showResolutionOverlay,
+                    onChange: {
+                        settingsManager.showResolutionOverlay = $0
+                    }
+                )
+
+                Divider()
+                
+                SettingsFormRow(
                     label: "Launch at Login",
                     isOn: $launchAtLogin,
                     onChange: {
@@ -41,7 +52,7 @@ struct GeneralSettingsTab: View {
                         updateLaunchAtLogin(enabled: $0)
                     }
                 )
-
+                
                 Divider()
 
                 SettingsFormRow(
