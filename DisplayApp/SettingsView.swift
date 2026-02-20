@@ -178,8 +178,8 @@ struct PresetRow: View {
 
 #Preview {
     SettingsView(
-        displayManager: MockDisplayManager(),
-        settingsManager: MockSettingsManager(),
+        displayManager: MockDisplayManager.preview,
+        settingsManager: MockSettingsManager.preview,
         onPresetsChanged: nil
     )
 }

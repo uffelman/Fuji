@@ -65,8 +65,8 @@ struct AboutSettingsTab: View {
 
             // Link buttons
             HStack(spacing: 10) {
-                AboutLinkButton("Source Code", url: "https://github.com/placeholder/DisplayApp")
-                AboutLinkButton("Developer Website", url: "https://stephenu.com")
+                PillButton("Source Code", style: .accent, url: "https://github.com/placeholder/DisplayApp")
+                PillButton("Developer Website", style: .accent, url: "https://stephenu.com")
             }
             .padding(.bottom, 20)
 
@@ -78,7 +78,7 @@ struct AboutSettingsTab: View {
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
 
-                AboutLinkButton("Support on Ko-fi", url: "https://ko-fi.com/stephenu")
+                PillButton("Support on Ko-fi", style: .accent, url: "https://ko-fi.com/stephenu")
             }
             .padding(.vertical, 14)
             .padding(.horizontal, 20)
@@ -96,44 +96,6 @@ struct AboutSettingsTab: View {
         .padding(.top, 12)
         .padding(.bottom, 8)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-}
-
-/// A custom link button styled to match the About tab design.
-///
-/// Renders as a tinted squircle pill with accent-colored text and a
-/// subtle accent background + border, matching the HTML mockup.
-private struct AboutLinkButton: View {
-    let title: String
-    let url: URL
-
-    @State private var isHovered = false
-
-    init(_ title: String, url: String) {
-        self.title = title
-        self.url = URL(string: url)!
-    }
-
-    var body: some View {
-        Link(destination: url) {
-            Text(title)
-                .font(.system(size: 13, weight: .medium))
-                .padding(.horizontal, 16)
-                .padding(.vertical, 7)
-                .foregroundStyle(Color.accentColor)
-                .background(
-                    Color.accentColor.opacity(isHovered ? 0.14 : 0.08),
-                    in: .rect(cornerRadius: 8)
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .strokeBorder(Color.accentColor.opacity(0.15), lineWidth: 1)
-                )
-        }
-        .buttonStyle(.plain)
-        .onHover { hovering in
-            isHovered = hovering
-        }
     }
 }
 

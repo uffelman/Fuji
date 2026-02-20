@@ -539,6 +539,7 @@ final class DisplayManager: DisplayManaging {
 
 @MainActor
 final class MockDisplayManager: DisplayManaging {
+    static let preview = MockDisplayManager()
     
     var displays: [Display] = []
     

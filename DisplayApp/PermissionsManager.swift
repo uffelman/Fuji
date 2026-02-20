@@ -127,6 +127,8 @@ final class PermissionsManager: PermissionsManaging {
 @Observable
 @MainActor
 final class MockPermissionsManager: PermissionsManaging {
+    static let previewTrusted = MockPermissionsManager(isAccessibilityTrusted: true)
+    static let previewUntrusted = MockPermissionsManager(isAccessibilityTrusted: false)
 
     /// Set this to drive UI state changes in previews or tests.
     var isAccessibilityTrusted: Bool
@@ -139,7 +141,7 @@ final class MockPermissionsManager: PermissionsManaging {
 
     /// - Parameter isAccessibilityTrusted: The initial simulated permission
     ///   state. Defaults to `false` so that the "not granted" UI is shown.
-    init(isAccessibilityTrusted: Bool = false) {
+    init(isAccessibilityTrusted: Bool) {
         self.isAccessibilityTrusted = isAccessibilityTrusted
     }
 

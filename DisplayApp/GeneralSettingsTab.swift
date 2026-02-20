@@ -150,5 +150,5 @@ private struct SettingsFormRow: View {
 }
 
 #Preview {
-    GeneralSettingsTab(settingsManager: MockSettingsManager())
+    GeneralSettingsTab(settingsManager: MockSettingsManager.preview)
 }

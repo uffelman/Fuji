@@ -367,14 +367,14 @@ private struct _HeightKey: PreferenceKey {
 
 #Preview("Permissions – not granted") {
     PermissionsPage(
-        permissions: MockPermissionsManager(isAccessibilityTrusted: false),
+        permissions: MockPermissionsManager.previewUntrusted,
         onDismiss: nil,
         onWillRequestPermission: nil
     )
 }
 #Preview("Permissions – granted") {
     PermissionsPage(
-        permissions: MockPermissionsManager(isAccessibilityTrusted: true),
+        permissions: MockPermissionsManager.previewTrusted,
         onDismiss: nil,
         onWillRequestPermission: nil
     )
@@ -384,7 +384,7 @@ private struct _HeightKey: PreferenceKey {
     OnboardingView(
         onDismiss: nil,
         onWillRequestPermission: nil,
-        permissions: MockPermissionsManager(),
+        permissions: MockPermissionsManager.previewUntrusted,
         startOnPage: 0
     )
 }

@@ -14,13 +14,28 @@ import Foundation
 /// app lifecycle events including launch-time initialization and accessibility permissions.
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    var keyboardShortcutManager: KeyboardShortcutManager!
-    var menuBarController: MenuBarController!
-    var onboardingWindowController: OnboardingWindowController!
+    var displayManager: DisplayManager!
+    private var keyboardShortcutManager: KeyboardShortcutManager!
+    private var menuBarController: MenuBarController!
     var permissionsManager: PermissionsManager!
     var settingsManager: SettingsManaging!
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        guard !ProcessInfo.processInfo.isSwiftUIPreview else { return }
+        
+        keyboardShortcutManager = KeyboardShortcutManager(
+            displayManager: displayManager,
+            settingsManager: settingsManager,
+            permissionsManager: permissionsManager
+        )
+        
+        menuBarController = MenuBarController(
+            displayManager: displayManager,
+            settingsManager: settingsManager
+        )
+        
+        let onboardingWindowController = OnboardingWindowController(permissions: permissionsManager)
+        
         // Hide dock icon by default (menu bar app)
         if !settingsManager.showInDock {
             NSApplication.shared.setActivationPolicy(.accessory)

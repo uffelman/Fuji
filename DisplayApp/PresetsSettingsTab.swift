@@ -76,11 +76,10 @@ struct PresetsSettingsTab: View {
                     .background(Color(.controlBackgroundColor))
                     .clipShape(.rect(cornerRadius: 10))
                 }
-
-                Button(action: { showingAddPreset = true }) {
-                    Label("Add Preset", systemImage: "plus")
+                
+                PillButton("Add Preset", style: .monochrome) {
+                    showingAddPreset = true
                 }
-                .buttonStyle(.bordered)
             }
             .padding(.top, 14)
             .padding(.horizontal)

@@ -142,7 +142,9 @@ final class SettingsManager: SettingsManaging {
     }
 }
 
-class MockSettingsManager: SettingsManaging {
+final class MockSettingsManager: SettingsManaging {
+    static let preview = MockSettingsManager()
+    
     var presets: [ResolutionPreset] = []
     var launchAtLogin = false
     var showInDock = false
