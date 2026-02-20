@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DisplayApp Onboarding Redesign</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", sans-serif;
+    background: #1a1a2e;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    gap: 60px;
+    min-height: 100vh;
+  }
+
+  h1 {
+    color: white;
+    font-size: 28px;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+
+  p.subtitle {
+    color: rgba(255,255,255,0.45);
+    font-size: 14px;
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .label {
+    color: rgba(255,255,255,0.4);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+
+  .row {
+    display: flex;
+    gap: 40px;
+    align-items: flex-start;
+  }
+
+  .mode-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+  }
+
+  .state-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* ===== WINDOW CHROME ===== */
+  .window {
+    width: 480px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.45), 0 0 0 0.5px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .titlebar {
+    height: 52px;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 8px;
+  }
+
+  .traffic-lights {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .traffic-light {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+  }
+
+  .tl-red { background: #ff5f57; }
+  .tl-yellow { background: #ffbd2e; }
+  .tl-green { background: #28c840; }
+
+  .titlebar-title {
+    flex: 1;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    margin-right: 68px;
+  }
+
+  .content-area {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .footer {
+    display: flex;
+    align-items: center;
+    padding: 18px 28px;
+  }
+
+  .footer-divider {
+    height: 1px;
+    width: 100%;
+  }
+
+  /* Page dots */
+  .page-dots {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+  }
+
+  .spacer { flex: 1; }
+
+  /* Buttons */
+  .btn-primary {
+    padding: 7px 20px;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    background: #007AFF;
+    color: white;
+  }
+
+  .btn-primary.disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+
+  .btn-secondary {
+    padding: 7px 14px;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    background: transparent;
+    margin-left: 8px;
+  }
+
+  .btn-bordered {
+    padding: 7px 16px;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* ===== LIGHT MODE ===== */
+  .window.light { background: #f0f0f0; }
+  .window.light .titlebar {
+    background: rgba(236,236,236,0.95);
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+  }
+  .window.light .titlebar-title { color: rgba(0,0,0,0.75); }
+  .window.light .content-area { background: #f0f0f0; }
+  .window.light .footer { background: rgba(255,255,255,0.6); }
+  .window.light .footer-divider { background: rgba(0,0,0,0.08); }
+  .window.light .btn-secondary { color: rgba(0,0,0,0.45); }
+
+  .window.light .dot.active { background: #007AFF; }
+  .window.light .dot.inactive { background: rgba(0,0,0,0.15); }
+
+  .window.light .hero-title { color: rgba(0,0,0,0.85); }
+  .window.light .hero-subtitle { color: rgba(0,0,0,0.45); }
+
+  .window.light .feature-title { color: rgba(0,0,0,0.85); }
+  .window.light .feature-desc { color: rgba(0,0,0,0.45); }
+
+  .window.light .status-card {
+    border-radius: 10px;
+    padding: 14px;
+  }
+  .window.light .status-card.granted {
+    background: rgba(52,199,89,0.08);
+    border: 1px solid rgba(52,199,89,0.25);
+  }
+  .window.light .status-card.not-granted {
+    background: rgba(255,149,0,0.08);
+    border: 1px solid rgba(255,149,0,0.25);
+  }
+  .window.light .status-title { color: rgba(0,0,0,0.85); }
+  .window.light .status-detail { color: rgba(0,0,0,0.45); }
+
+  .window.light .steps-title { color: rgba(0,0,0,0.7); }
+  .window.light .step-text { color: rgba(0,0,0,0.45); }
+
+  .window.light .btn-bordered {
+    background: rgba(0,0,0,0.06);
+    color: rgba(0,0,0,0.7);
+    border: 1px solid rgba(0,0,0,0.1);
+  }
+
+  /* ===== DARK MODE ===== */
+  .window.dark { background: #1c1c1e; }
+  .window.dark .titlebar {
+    background: rgba(30,30,32,0.95);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .window.dark .titlebar-title { color: rgba(255,255,255,0.75); }
+  .window.dark .content-area { background: #1c1c1e; }
+  .window.dark .footer { background: rgba(255,255,255,0.04); }
+  .window.dark .footer-divider { background: rgba(255,255,255,0.07); }
+  .window.dark .btn-secondary { color: rgba(255,255,255,0.4); }
+
+  .window.dark .dot.active { background: #0A84FF; }
+  .window.dark .dot.inactive { background: rgba(255,255,255,0.15); }
+
+  .window.dark .hero-title { color: rgba(255,255,255,0.92); }
+  .window.dark .hero-subtitle { color: rgba(255,255,255,0.4); }
+
+  .window.dark .feature-title { color: rgba(255,255,255,0.88); }
+  .window.dark .feature-desc { color: rgba(255,255,255,0.38); }
+
+  .window.dark .status-card {
+    border-radius: 10px;
+    padding: 14px;
+  }
+  .window.dark .status-card.granted {
+    background: rgba(48,209,88,0.1);
+    border: 1px solid rgba(48,209,88,0.25);
+  }
+  .window.dark .status-card.not-granted {
+    background: rgba(255,159,10,0.08);
+    border: 1px solid rgba(255,159,10,0.2);
+  }
+  .window.dark .status-title { color: rgba(255,255,255,0.88); }
+  .window.dark .status-detail { color: rgba(255,255,255,0.38); }
+
+  .window.dark .steps-title { color: rgba(255,255,255,0.6); }
+  .window.dark .step-text { color: rgba(255,255,255,0.38); }
+
+  .window.dark .btn-bordered {
+    background: rgba(255,255,255,0.07);
+    color: rgba(255,255,255,0.65);
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .window.dark .btn-primary {
+    background: #0A84FF;
+  }
+
+  /* ===== SHARED CONTENT STYLES ===== */
+
+  /* Hero section */
+  .hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding: 36px 40px 0;
+  }
+
+  .hero-icon {
+    width: 72px; height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .hero-title {
+    font-size: 22px;
+    font-weight: 700;
+    text-align: center;
+  }
+
+  .hero-subtitle {
+    font-size: 13.5px;
+    line-height: 1.5;
+    text-align: center;
+    max-width: 360px;
+  }
+
+  /* Feature rows */
+  .features {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 24px 36px 28px;
+  }
+
+  .feature-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .feature-icon {
+    width: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-top: 1px;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .feature-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .feature-title {
+    font-size: 13.5px;
+    font-weight: 600;
+  }
+
+  .feature-desc {
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  /* Permission page */
+  .perm-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 36px 28px;
+    gap: 0;
+  }
+
+  .perm-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .status-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .status-icon {
+    font-size: 22px;
+    flex-shrink: 0;
+    line-height: 1.2;
+  }
+
+  .status-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .status-title {
+    font-size: 13.5px;
+    font-weight: 500;
+  }
+
+  .status-detail {
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  /* CTA + steps */
+  .perm-cta {
+    margin-top: 18px;
+  }
+
+  .steps-section {
+    width: 100%;
+    margin-top: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .steps-title {
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 2px;
+  }
+
+  .step-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .step-number {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: #007AFF;
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .window.dark .step-number {
+    background: #0A84FF;
+  }
+
+  .step-text {
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .open-settings-btn {
+    align-self: center;
+    margin-top: 16px;
+    margin-bottom: 4px;
+  }
+</style>
+</head>
+<body>
+
+<h1>DisplayApp — Onboarding Redesign</h1>
+<p class="subtitle">Light & Dark mode · Welcome + Permissions (not granted / granted)</p>
+
+<div class="row">
+
+  <!-- ===== LIGHT MODE ===== -->
+  <div class="mode-column">
+    <div class="label">☀️ Light Mode</div>
+
+    <!-- PAGE 1: Welcome -->
+    <div class="state-group">
+      <div class="label" style="margin-top:0">Page 1 — Welcome</div>
+      <div class="window light">
+        <div class="titlebar">
+          <div class="traffic-lights">
+            <div class="traffic-light tl-red"></div>
+            <div class="traffic-light tl-yellow"></div>
+            <div class="traffic-light tl-green"></div>
+          </div>
+          <div class="titlebar-title">Welcome to DisplayApp</div>
+        </div>
+        <div class="content-area">
+          <div class="hero">
+            <div class="hero-icon">
+              <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
+                <!-- Back display -->
+                <rect x="16" y="10" width="40" height="28" rx="3" fill="#B8D4F0" stroke="#8BB8E0" stroke-width="1"/>
+                <rect x="18" y="12" width="36" height="22" rx="2" fill="#DCE9F5"/>
+                <!-- Front display -->
+                <rect x="6" y="20" width="36" height="26" rx="3" fill="#4DA3F2" stroke="#3B8DE0" stroke-width="1"/>
+                <rect x="8" y="22" width="32" height="20" rx="2" fill="#7DC0F8"/>
+                <!-- Stands -->
+                <path d="M20 46h12l-1 3H21l-1-3z" fill="#4DA3F2" opacity="0.7"/>
+                <path d="M34 38h8l-1 3h-6l-1-3z" fill="#8BB8E0" opacity="0.6"/>
+                <!-- Resolution text -->
+                <text x="24" y="35" text-anchor="middle" font-size="8" font-weight="700" fill="white" font-family="-apple-system">4K</text>
+              </svg>
+            </div>
+            <div class="hero-title">Welcome to DisplayApp</div>
+            <div class="hero-subtitle">Instantly switch between display resolutions from your menu bar.</div>
+          </div>
+
+          <div class="features">
+            <div class="feature-row">
+              <div class="feature-icon" style="color: #007AFF;">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><rect x="2" y="3" width="16" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="5" y="6" width="10" height="2" rx="0.5" fill="currentColor" opacity="0.5"/><rect x="5" y="9.5" width="7" height="2" rx="0.5" fill="currentColor" opacity="0.3"/><path d="M7 16h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              </div>
+              <div class="feature-info">
+                <div class="feature-title">Resolution Presets</div>
+                <div class="feature-desc">Save and name your favourite display configurations for one-click switching.</div>
+              </div>
+            </div>
+            <div class="feature-row">
+              <div class="feature-icon" style="color: #AF52DE;">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="1" y="6" width="18" height="10" rx="2" stroke="currentColor" stroke-width="1.5"/><rect x="3.5" y="8.5" width="4" height="3" rx="0.5" stroke="currentColor" stroke-width="1" opacity="0.5"/><rect x="8.5" y="8.5" width="4" height="3" rx="0.5" stroke="currentColor" stroke-width="1" opacity="0.5"/><rect x="13.5" y="8.5" width="3" height="3" rx="0.5" stroke="currentColor" stroke-width="1" opacity="0.5"/><rect x="5" y="12.5" width="10" height="2" rx="0.5" stroke="currentColor" stroke-width="1" opacity="0.4"/></svg>
+              </div>
+              <div class="feature-info">
+                <div class="feature-title">Global Keyboard Shortcuts</div>
+                <div class="feature-desc">Assign hotkeys to presets so you can change resolution without touching the mouse.</div>
+              </div>
+            </div>
+            <div class="feature-row">
+              <div class="feature-icon" style="color: #34C759;">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="1" y="4" width="18" height="2.5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="3" y="9" width="14" height="8" rx="1.5" stroke="currentColor" stroke-width="1.3"/><circle cx="10" cy="13" r="1.5" fill="currentColor" opacity="0.5"/></svg>
+              </div>
+              <div class="feature-info">
+                <div class="feature-title">Lives in Your Menu Bar</div>
+                <div class="feature-desc">DisplayApp stays out of your way — always available from the menu bar, never cluttering your Dock.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer-divider" style="background: rgba(0,0,0,0.08);"></div>
+        <div class="footer">
+          <div class="page-dots">
+            <div class="dot active"></div>
+            <div class="dot inactive"></div>
+          </div>
+          <div class="spacer"></div>
+          <button class="btn-primary">Continue</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 2: Permissions — Not Granted -->
+    <div class="state-group">
+      <div class="label">Page 2 — Permissions (not granted)</div>
+      <div class="window light">
+        <div class="titlebar">
+          <div class="traffic-lights">
+            <div class="traffic-light tl-red"></div>
+            <div class="traffic-light tl-yellow"></div>
+            <div class="traffic-light tl-green"></div>
+          </div>
+          <div class="titlebar-title">Welcome to DisplayApp</div>
+        </div>
+        <div class="content-area">
+          <div class="perm-content">
+            <div class="perm-hero">
+              <div class="hero-icon">
+                <svg width="66" height="66" viewBox="0 0 66 66" fill="none">
+                  <path d="M33 6 L54 18 V36 C54 48 44 57 33 60 C22 57 12 48 12 36 V18 L33 6Z" fill="#FF9500" opacity="0.12" stroke="#FF9500" stroke-width="1.5" opacity="0.3"/>
+                  <rect x="27" y="24" width="12" height="14" rx="2" fill="none" stroke="#FF9500" stroke-width="2"/>
+                  <path d="M25 30 C25 24 28 21 33 21 C38 21 41 24 41 30" fill="none" stroke="#FF9500" stroke-width="2" stroke-linecap="round"/>
+                  <circle cx="33" cy="33" r="1.5" fill="#FF9500"/>
+                </svg>
+              </div>
+              <div class="hero-title">Accessibility Permission</div>
+              <div class="hero-subtitle">Global keyboard shortcuts need <strong>Accessibility</strong> access so DisplayApp can respond to hotkeys even when another app is in focus.</div>
+            </div>
+
+            <div class="status-card not-granted">
+              <div class="status-icon">⚠️</div>
+              <div class="status-info">
+                <div class="status-title">Permission not granted</div>
+                <div class="status-detail">Keyboard shortcuts will not work until this is enabled.</div>
+              </div>
+            </div>
+
+            <div class="perm-cta">
+              <button class="btn-primary" style="padding: 8px 22px; font-size: 13.5px;">🔓 Allow Access…</button>
+            </div>
+
+            <div class="steps-section">
+              <div class="steps-title">Or grant access manually:</div>
+              <div class="step-row">
+                <div class="step-number">1</div>
+                <div class="step-text">Click <strong>Open System Settings</strong> below.</div>
+              </div>
+              <div class="step-row">
+                <div class="step-number">2</div>
+                <div class="step-text">Scroll to find <strong>DisplayApp</strong> in the list.</div>
+              </div>
+              <div class="step-row">
+                <div class="step-number">3</div>
+                <div class="step-text">Toggle the switch next to DisplayApp to <strong>on</strong>.</div>
+              </div>
+              <div class="step-row">
+                <div class="step-number">4</div>
+                <div class="step-text">Return here — permission status updates automatically.</div>
+              </div>
+            </div>
+
+            <div class="open-settings-btn">
+              <button class="btn-bordered">⚙️ Open System Settings</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer-divider" style="background: rgba(0,0,0,0.08);"></div>
+        <div class="footer">
+          <div class="page-dots">
+            <div class="dot inactive"></div>
+            <div class="dot active"></div>
+          </div>
+          <div class="spacer"></div>
+          <button class="btn-primary disabled">Done</button>
+          <button class="btn-secondary" style="color: rgba(0,0,0,0.4);">Skip for Now</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 2: Permissions — Granted -->
+    <div class="state-group">
+      <div class="label">Page 2 — Permissions (granted)</div>
+      <div class="window light">
+        <div class="titlebar">
+          <div class="traffic-lights">
+            <div class="traffic-light tl-red"></div>
+            <div class="traffic-light tl-yellow"></div>
+            <div class="traffic-light tl-green"></div>
+          </div>
+          <div class="titlebar-title">Welcome to DisplayApp</div>
+        </div>
+        <div class="content-area">
+          <div class="perm-content">
+            <div class="perm-hero">
+              <div class="hero-icon">
+                <svg width="66" height="66" viewBox="0 0 66 66" fill="none">
+                  <circle cx="33" cy="33" r="26" fill="#34C759" opacity="0.12" stroke="#34C759" stroke-width="1.5" opacity="0.3"/>
+                  <path d="M22 34 L29 41 L44 26" fill="none" stroke="#34C759" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div class="hero-title">Accessibility Permission</div>
+              <div class="hero-subtitle">Global keyboard shortcuts need <strong>Accessibility</strong> access so DisplayApp can respond to hotkeys even when another app is in focus.</div>
+            </div>
+
+            <div class="status-card granted">
+              <div class="status-icon">✅</div>
+              <div class="status-info">
+                <div class="status-title">Permission granted</div>
+                <div class="status-detail">Global keyboard shortcuts are active and ready to use.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer-divider" style="background: rgba(0,0,0,0.08);"></div>
+        <div class="footer">
+          <div class="page-dots">
+            <div class="dot inactive"></div>
+            <div class="dot active"></div>
+          </div>
+          <div class="spacer"></div>
+          <button class="btn-primary">Done</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===== DARK MODE ===== -->
+  <div class="mode-column">
+    <div class="label">🌑 Dark Mode</div>
+
+    <!-- PAGE 1: Welcome -->
+    <div class="state-group">
+      <div class="label" style="margin-top:0">Page 1 — Welcome</div>
+      <div class="window dark">
+        <div class="titlebar">
+          <div class="traffic-lights">
+            <div class="traffic-light tl-red"></div>
+            <div class="traffic-light tl-yellow"></div>
+            <div class="traffic-light tl-green"></div>
+          </div>
+          <div class="titlebar-title">Welcome to DisplayApp</div>
+        </div>
+        <div class="content-area">
+          <div class="hero">
+            <div class="hero-icon">
+              <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
+                <rect x="16" y="10" width="40" height="28" rx="3" fill="#2A4A6B" stroke="#3B6A9B" stroke-width="1"/>
+                <rect x="18" y="12" width="36" height="22" rx="2" fill="#1E3A55"/>
+                <rect x="6" y="20" width="36" height="26" rx="3" fill="#3395FF" stroke="#2B7DE0" stroke-width="1"/>
+                <rect x="8" y="22" width="32" height="20" rx="2" fill="#5AACFF" opacity="0.7"/>
+                <path d="M20 46h12l-1 3H21l-1-3z" fill="#3395FF" opacity="0.7"/>
+                <path d="M34 38h8l-1 3h-6l-1-3z" fill="#3B6A9B" opacity="0.6"/>
+                <text x="24" y="35" text-anchor="middle" font-size="8" font-weight="700" fill="white" font-family="-apple-system">4K</text>
+              </svg>
+            </div>
+            <div class="hero-title">Welcome to DisplayApp</div>
+            <div class="hero-subtitle">Instantly switch between display resolutions from your menu bar.</div>
+          </div>
+
+          <div class="features">
+            <div class="feature-row">
+              <div class="feature-icon" style="color: #0A84FF;">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><rect x="2" y="3" width="16" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="5" y="6" width="10" height="2" rx="0.5" fill="currentColor" opacity="0.5"/><rect x="5" y="9.5" width="7" height="2" rx="0.5" fill="currentColor" opacity="0.3"/><path d="M7 16h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              </div>
+              <div class="feature-info">
+                <div class="feature-title">Resolution Presets</div>
+                <div class="feature-desc">Save and name your favourite display configurations for one-click switching.</div>
+              </div>
+            </div>
+            <div class="feature-row">
+              <div class="feature-icon" style="color: #BF5AF2;">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="1" y="6" width="18" height="10" rx="2" stroke="currentColor" stroke-width="1.5"/><rect x="3.5" y="8.5" width="4" height="3" rx="0.5" stroke="currentColor" stroke-width="1" opacity="0.5"/><rect x="8.5" y="8.5" width="4" height="3" rx="0.5" stroke="currentColor" stroke-width="1" opacity="0.5"/><rect x="13.5" y="8.5" width="3" height="3" rx="0.5" stroke="currentColor" stroke-width="1" opacity="0.5"/><rect x="5" y="12.5" width="10" height="2" rx="0.5" stroke="currentColor" stroke-width="1" opacity="0.4"/></svg>
+              </div>
+              <div class="feature-info">
+                <div class="feature-title">Global Keyboard Shortcuts</div>
+                <div class="feature-desc">Assign hotkeys to presets so you can change resolution without touching the mouse.</div>
+              </div>
+            </div>
+            <div class="feature-row">
+              <div class="feature-icon" style="color: #30D158;">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="1" y="4" width="18" height="2.5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="3" y="9" width="14" height="8" rx="1.5" stroke="currentColor" stroke-width="1.3"/><circle cx="10" cy="13" r="1.5" fill="currentColor" opacity="0.5"/></svg>
+              </div>
+              <div class="feature-info">
+                <div class="feature-title">Lives in Your Menu Bar</div>
+                <div class="feature-desc">DisplayApp stays out of your way — always available from the menu bar, never cluttering your Dock.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer-divider" style="background: rgba(255,255,255,0.07);"></div>
+        <div class="footer">
+          <div class="page-dots">
+            <div class="dot active"></div>
+            <div class="dot inactive"></div>
+          </div>
+          <div class="spacer"></div>
+          <button class="btn-primary" style="background: #0A84FF;">Continue</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 2: Permissions — Not Granted -->
+    <div class="state-group">
+      <div class="label">Page 2 — Permissions (not granted)</div>
+      <div class="window dark">
+        <div class="titlebar">
+          <div class="traffic-lights">
+            <div class="traffic-light tl-red"></div>
+            <div class="traffic-light tl-yellow"></div>
+            <div class="traffic-light tl-green"></div>
+          </div>
+          <div class="titlebar-title">Welcome to DisplayApp</div>
+        </div>
+        <div class="content-area">
+          <div class="perm-content">
+            <div class="perm-hero">
+              <div class="hero-icon">
+                <svg width="66" height="66" viewBox="0 0 66 66" fill="none">
+                  <path d="M33 6 L54 18 V36 C54 48 44 57 33 60 C22 57 12 48 12 36 V18 L33 6Z" fill="#FF9F0A" opacity="0.12" stroke="#FF9F0A" stroke-width="1.5" opacity="0.3"/>
+                  <rect x="27" y="24" width="12" height="14" rx="2" fill="none" stroke="#FF9F0A" stroke-width="2"/>
+                  <path d="M25 30 C25 24 28 21 33 21 C38 21 41 24 41 30" fill="none" stroke="#FF9F0A" stroke-width="2" stroke-linecap="round"/>
+                  <circle cx="33" cy="33" r="1.5" fill="#FF9F0A"/>
+                </svg>
+              </div>
+              <div class="hero-title">Accessibility Permission</div>
+              <div class="hero-subtitle">Global keyboard shortcuts need <strong>Accessibility</strong> access so DisplayApp can respond to hotkeys even when another app is in focus.</div>
+            </div>
+
+            <div class="status-card not-granted">
+              <div class="status-icon">⚠️</div>
+              <div class="status-info">
+                <div class="status-title">Permission not granted</div>
+                <div class="status-detail">Keyboard shortcuts will not work until this is enabled.</div>
+              </div>
+            </div>
+
+            <div class="perm-cta">
+              <button class="btn-primary" style="background: #0A84FF; padding: 8px 22px; font-size: 13.5px;">🔓 Allow Access…</button>
+            </div>
+
+            <div class="steps-section">
+              <div class="steps-title">Or grant access manually:</div>
+              <div class="step-row">
+                <div class="step-number">1</div>
+                <div class="step-text">Click <strong>Open System Settings</strong> below.</div>
+              </div>
+              <div class="step-row">
+                <div class="step-number">2</div>
+                <div class="step-text">Scroll to find <strong>DisplayApp</strong> in the list.</div>
+              </div>
+              <div class="step-row">
+                <div class="step-number">3</div>
+                <div class="step-text">Toggle the switch next to DisplayApp to <strong>on</strong>.</div>
+              </div>
+              <div class="step-row">
+                <div class="step-number">4</div>
+                <div class="step-text">Return here — permission status updates automatically.</div>
+              </div>
+            </div>
+
+            <div class="open-settings-btn">
+              <button class="btn-bordered">⚙️ Open System Settings</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer-divider" style="background: rgba(255,255,255,0.07);"></div>
+        <div class="footer">
+          <div class="page-dots">
+            <div class="dot inactive"></div>
+            <div class="dot active"></div>
+          </div>
+          <div class="spacer"></div>
+          <button class="btn-primary disabled" style="background: #0A84FF;">Done</button>
+          <button class="btn-secondary" style="color: rgba(255,255,255,0.35);">Skip for Now</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 2: Permissions — Granted -->
+    <div class="state-group">
+      <div class="label">Page 2 — Permissions (granted)</div>
+      <div class="window dark">
+        <div class="titlebar">
+          <div class="traffic-lights">
+            <div class="traffic-light tl-red"></div>
+            <div class="traffic-light tl-yellow"></div>
+            <div class="traffic-light tl-green"></div>
+          </div>
+          <div class="titlebar-title">Welcome to DisplayApp</div>
+        </div>
+        <div class="content-area">
+          <div class="perm-content">
+            <div class="perm-hero">
+              <div class="hero-icon">
+                <svg width="66" height="66" viewBox="0 0 66 66" fill="none">
+                  <circle cx="33" cy="33" r="26" fill="#30D158" opacity="0.12" stroke="#30D158" stroke-width="1.5" opacity="0.3"/>
+                  <path d="M22 34 L29 41 L44 26" fill="none" stroke="#30D158" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div class="hero-title">Accessibility Permission</div>
+              <div class="hero-subtitle">Global keyboard shortcuts need <strong>Accessibility</strong> access so DisplayApp can respond to hotkeys even when another app is in focus.</div>
+            </div>
+
+            <div class="status-card granted">
+              <div class="status-icon">✅</div>
+              <div class="status-info">
+                <div class="status-title">Permission granted</div>
+                <div class="status-detail">Global keyboard shortcuts are active and ready to use.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer-divider" style="background: rgba(255,255,255,0.07);"></div>
+        <div class="footer">
+          <div class="page-dots">
+            <div class="dot inactive"></div>
+            <div class="dot active"></div>
+          </div>
+          <div class="spacer"></div>
+          <button class="btn-primary" style="background: #0A84FF;">Done</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+</body>
+</html>

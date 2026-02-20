@@ -19,6 +19,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var menuBarController: MenuBarController!
     var permissionsManager: PermissionsManager!
     var settingsManager: SettingsManaging!
+    private var onboardingWindowController: OnboardingWindowController!
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         guard !ProcessInfo.processInfo.isSwiftUIPreview else { return }
@@ -34,7 +35,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             settingsManager: settingsManager
         )
         
-        let onboardingWindowController = OnboardingWindowController(permissions: permissionsManager)
+        onboardingWindowController = OnboardingWindowController(permissions: permissionsManager)
         
         // Hide dock icon by default (menu bar app)
         if !settingsManager.showInDock {

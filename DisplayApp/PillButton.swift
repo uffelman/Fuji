@@ -22,9 +22,13 @@ import SwiftUI
 ///
 /// // Action variant (monochrome)
 /// PillButton("Record Shortcut", style: .monochrome) { startRecording() }
+///
+/// // With a leading SF Symbol
+/// PillButton("Allow Access…", systemImage: "lock.open.fill", style: .accent) { requestAccess() }
 /// ```
 struct PillButton: View {
     let title: String
+    let systemImage: String?
     let style: PillButtonStyle
     private let destination: URL?
     private let action: (() -> Void)?
@@ -32,16 +36,18 @@ struct PillButton: View {
     @State private var isHovered = false
 
     /// Creates a pill button that opens a URL.
-    init(_ title: String, style: PillButtonStyle = .accent, url: String) {
+    init(_ title: String, systemImage: String? = nil, style: PillButtonStyle = .accent, url: String) {
         self.title = title
+        self.systemImage = systemImage
         self.style = style
         self.destination = URL(string: url)
         self.action = nil
     }
 
     /// Creates a pill button that performs an action.
-    init(_ title: String, style: PillButtonStyle = .accent, action: @escaping () -> Void) {
+    init(_ title: String, systemImage: String? = nil, style: PillButtonStyle = .accent, action: @escaping () -> Void) {
         self.title = title
+        self.systemImage = systemImage
         self.style = style
         self.destination = nil
         self.action = action
@@ -83,20 +89,27 @@ struct PillButton: View {
         }
     }
 
+    @ViewBuilder
     private var label: some View {
-        Text(title)
-            .font(.system(size: 13, weight: .medium))
-            .padding(.horizontal, 16)
-            .padding(.vertical, 7)
-            .foregroundStyle(tintColor)
-            .background(
-                tintColor.opacity(fillOpacity),
-                in: .rect(cornerRadius: 8, style: .continuous)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .strokeBorder(tintColor.opacity(borderOpacity), lineWidth: 1)
-            )
+        Group {
+            if let systemImage {
+                Label(title, systemImage: systemImage)
+            } else {
+                Text(title)
+            }
+        }
+        .font(.system(size: 13, weight: .medium))
+        .padding(.horizontal, 16)
+        .padding(.vertical, 7)
+        .foregroundStyle(tintColor)
+        .background(
+            tintColor.opacity(fillOpacity),
+            in: .rect(cornerRadius: 8, style: .continuous)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .strokeBorder(tintColor.opacity(borderOpacity), lineWidth: 1)
+        )
     }
 }
 
@@ -121,6 +134,18 @@ struct PillButton: View {
             HStack(spacing: 10) {
                 PillButton("Record Shortcut", style: .monochrome) {}
                 PillButton("Cancel", style: .monochrome) {}
+            }
+        }
+
+        Divider()
+
+        VStack(spacing: 8) {
+            Text("With leading image")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            HStack(spacing: 10) {
+                PillButton("Allow Access…", systemImage: "lock.open.fill", style: .accent) {}
+                PillButton("Open Settings", systemImage: "gear", style: .monochrome) {}
             }
         }
     }
