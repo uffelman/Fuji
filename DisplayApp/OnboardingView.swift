@@ -102,7 +102,7 @@ struct OnboardingView: View {
 
                 if currentPage == 0 {
                     Button("Continue") {
-                        withAnimation { currentPage = 1 }
+                        currentPage = 1
                     }
                     .buttonStyle(.borderedProminent)
                     .keyboardShortcut(.return, modifiers: [])
@@ -323,7 +323,6 @@ private struct PermissionStatusCard: View {
                     lineWidth: 1
                 )
         )
-        .animation(.easeInOut(duration: 0.3), value: hasPermission)
     }
 }
 
@@ -383,4 +382,3 @@ private struct _HeightKey: PreferenceKey {
         startOnPage: 0
     )
 }
-    
