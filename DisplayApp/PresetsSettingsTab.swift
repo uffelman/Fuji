@@ -1,5 +1,5 @@
 //
-//  PresetsTab.swift
+//  PresetsSettingsTab.swift
 //  DisplayApp
 //
 //  Created by Stephen Uffelman on 2/19/26.
@@ -13,7 +13,7 @@ import SwiftUI
 ///
 /// Allows users to create, edit, delete, and reorder resolution presets.
 /// Shows warnings when accessibility permissions are not granted.
-struct PresetsTab: View {
+struct PresetsSettingsTab: View {
     let displayManager: any DisplayManaging
     let settingsManager: any SettingsManaging
     let onPresetsChanged: (() -> Void)?
@@ -23,64 +23,69 @@ struct PresetsTab: View {
     @State private var hasAccessibilityPermission = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Resolution Presets")
-                    .font(.system(size: 15, weight: .semibold))
+        ScrollView {
+            VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Resolution Presets")
+                        .font(.system(size: 15, weight: .semibold))
 
-                Text(
-                    "Quick-switch between display configurations using keyboard shortcuts."
-                )
-                .font(.system(size: 12))
-                .foregroundStyle(.secondary)
-            }
-
-            if !hasAccessibilityPermission {
-                AccessibilityPermissionWarning {
-                    hasAccessibilityPermission = checkAccessibilityPermission()
+                    Text(
+                        "Quick-switch between display configurations using keyboard shortcuts."
+                    )
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
                 }
-            }
 
-            if settingsManager.presets.isEmpty {
-                VStack(spacing: 12) {
-                    Image(systemName: "rectangle.stack.badge.plus")
-                        .font(.largeTitle)
-                        .foregroundStyle(.secondary)
-                    Text("No presets configured")
-                        .font(.headline)
-                    Text("Click the + button to create a new preset")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                VStack(spacing: 0) {
-                    ForEach(settingsManager.presets.enumerated(), id: \.element.id) { index, preset in
-                        PresetRow(
-                            preset: preset,
-                            onEdit: {
-                                editingPreset = preset
-                            },
-                            onDelete: {
-                                settingsManager.deletePreset(preset)
-                                onPresetsChanged?()
-                            })
-
-                        if index < settingsManager.presets.count - 1 {
-                            Divider()
-                        }
+                if !hasAccessibilityPermission {
+                    AccessibilityPermissionWarning {
+                        hasAccessibilityPermission = checkAccessibilityPermission()
                     }
                 }
-                .background(Color(.controlBackgroundColor))
-                .clipShape(.rect(cornerRadius: 10))
-            }
 
-            Button(action: { showingAddPreset = true }) {
-                Label("Add Preset", systemImage: "plus")
+                if settingsManager.presets.isEmpty {
+                    VStack(spacing: 12) {
+                        Image(systemName: "rectangle.stack.badge.plus")
+                            .font(.largeTitle)
+                            .foregroundStyle(.secondary)
+                        Text("No presets configured")
+                            .font(.headline)
+                        Text("Click the + button to create a new preset")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 40)
+                } else {
+                    VStack(spacing: 0) {
+                        ForEach(settingsManager.presets.enumerated(), id: \.element.id) { index, preset in
+                            PresetRow(
+                                preset: preset,
+                                onEdit: {
+                                    editingPreset = preset
+                                },
+                                onDelete: {
+                                    settingsManager.deletePreset(preset)
+                                    onPresetsChanged?()
+                                })
+
+                            if index < settingsManager.presets.count - 1 {
+                                Divider()
+                            }
+                        }
+                    }
+                    .background(Color(.controlBackgroundColor))
+                    .clipShape(.rect(cornerRadius: 10))
+                }
+
+                Button(action: { showingAddPreset = true }) {
+                    Label("Add Preset", systemImage: "plus")
+                }
+                .buttonStyle(.bordered)
             }
-            .buttonStyle(.bordered)
+            .padding(.top, 14)
+            .padding(.horizontal)
         }
-        .padding()
+        .scrollBounceBehavior(.basedOnSize)
         .sheet(isPresented: $showingAddPreset) {
             PresetEditorSheet(
                 displayManager: displayManager,

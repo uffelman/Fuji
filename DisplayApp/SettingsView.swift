@@ -12,6 +12,8 @@ import SwiftUI
 ///
 /// Displays a tab-based interface with sections for managing presets, general settings, and app information.
 struct SettingsView: View {
+    static let size = CGSize(width: 500, height: 470)
+    
     let displayManager: any DisplayManaging
     let settingsManager: any SettingsManaging
     let onPresetsChanged: (() -> Void)?
@@ -46,15 +48,15 @@ struct SettingsView: View {
             Group {
                 switch selectedTab {
                 case .presets:
-                    PresetsTab(
+                    PresetsSettingsTab(
                         displayManager: displayManager,
                         settingsManager: settingsManager,
                         onPresetsChanged: onPresetsChanged
                     )
                 case .general:
-                    GeneralTab(settingsManager: settingsManager)
+                    GeneralSettingsTab(settingsManager: settingsManager)
                 case .about:
-                    AboutTab()
+                    AboutSettingsTab()
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -108,10 +110,10 @@ private enum SettingsTab: Int, CaseIterable {
         case .about: "About"
         }
     }
-
+    
     var icon: String {
         switch self {
-        case .presets: "list.bullet.rectangle"
+        case .presets: "display"
         case .general: "gearshape"
         case .about: "info.circle"
         }

@@ -53,7 +53,10 @@ struct DisplayAppApp: App {
                     NotificationCenter.default.post(name: .presetsDidChange, object: nil)
                 }
             )
-            .frame(minWidth: 500, minHeight: 400)
+            .frame(
+                width: SettingsView.size.width,
+                height: SettingsView.size.height
+            )
         }
     }
 }

@@ -397,12 +397,19 @@ final class MenuBarController: NSObject {
             )
 
             let hostingController = NSHostingController(rootView: settingsView)
+            hostingController.sizingOptions = []
+
+            let contentSize = NSSize(
+                width: SettingsView.size.width,
+                height: SettingsView.size.height
+            )
 
             settingsWindow = NSWindow(contentViewController: hostingController)
             settingsWindow?.title = "DisplayApp Settings"
-            settingsWindow?.styleMask = [.titled, .closable, .miniaturizable, .resizable]
-            settingsWindow?.setContentSize(NSSize(width: 600, height: 500))
-            settingsWindow?.minSize = NSSize(width: 500, height: 400)
+            settingsWindow?.styleMask = [.titled, .closable, .miniaturizable]
+            settingsWindow?.setContentSize(contentSize)
+            settingsWindow?.minSize = contentSize
+            settingsWindow?.maxSize = contentSize
             settingsWindow?.center()
             settingsWindow?.isReleasedWhenClosed = false
         }

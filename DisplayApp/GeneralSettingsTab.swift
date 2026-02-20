@@ -1,5 +1,5 @@
 //
-//  GeneralTab.swift
+//  GeneralSettingsTab.swift
 //  DisplayApp
 //
 //  Created by Stephen Uffelman on 2/19/26.
@@ -14,7 +14,7 @@ import SwiftUI
 /// Provides controls for launch at login and dock visibility preferences.
 /// In debug builds, an additional Developer section exposes convenience toggles
 /// that are never compiled into release builds.
-struct GeneralTab: View {
+struct GeneralSettingsTab: View {
     let settingsManager: any SettingsManaging
 
     @State private var launchAtLogin = false
@@ -138,7 +138,7 @@ private struct SettingsFormRow: View {
             Spacer()
             Toggle("", isOn: $isOn)
                 .toggleStyle(.switch)
-                .controlSize(.small)
+                .controlSize(.mini)
                 .labelsHidden()
                 .onChange(of: isOn) { _, newValue in
                     onChange?(newValue)
@@ -150,5 +150,5 @@ private struct SettingsFormRow: View {
 }
 
 #Preview {
-    GeneralTab(settingsManager: MockSettingsManager())
+    GeneralSettingsTab(settingsManager: MockSettingsManager())
 }
