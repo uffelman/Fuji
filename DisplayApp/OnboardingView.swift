@@ -101,24 +101,21 @@ struct OnboardingView: View {
                 Spacer()
 
                 if currentPage == 0 {
-                    Button("Continue") {
+                    PillButton("Continue", style: .accent) {
                         currentPage = 1
                     }
-                    .buttonStyle(.borderedProminent)
                     .keyboardShortcut(.return, modifiers: [])
                 } else {
-                    Button("Done") {
-                        onDismiss?()
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .keyboardShortcut(.return, modifiers: [])
-                    .disabled(!hasPermission)
-
-                    if !hasPermission {
-                        Button("Skip for Now") {
+                    if hasPermission {
+                        PillButton("Done", style: .accent) {
                             onDismiss?()
                         }
-                        .foregroundStyle(.secondary)
+                        .keyboardShortcut(.return, modifiers: [])
+                    } else {
+                        PillButton("Skip for Now", style: .monochrome) {
+                            onDismiss?()
+                        }
+                        .keyboardShortcut(.return, modifiers: [])
                     }
                 }
             }
