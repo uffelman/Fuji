@@ -27,7 +27,7 @@ struct DisplayAppApp: App {
             SettingsView(
                 displayManager: container.displayManager,
                 settingsManager: container.settingsManager,
-                onPresetsChanged: appDelegate.updateMenuBarAndShortcutsForPresets
+                onPresetsChanged: appDelegate.updateMenuBarAndKeyboardShortcuts
             )
             .frame(
                 width: SettingsViewMetrics.size.width,

@@ -5,6 +5,7 @@
 //  Created by Stephen Uffelman on 2/19/26.
 //
 
+import OSLog
 import ServiceManagement
 import SwiftUI
 
@@ -120,17 +121,14 @@ struct GeneralSettingsTab: View {
     ///
     /// - Parameter enabled: Whether to enable or disable launch at login
     private func updateLaunchAtLogin(enabled: Bool) {
-        // Use SMAppService for modern macOS launch at login
-        if #available(macOS 13.0, *) {
-            do {
-                if enabled {
-                    try SMAppService.mainApp.register()
-                } else {
-                    try SMAppService.mainApp.unregister()
-                }
-            } catch {
-                print("Failed to update launch at login: \(error)")
+        do {
+            if enabled {
+                try SMAppService.mainApp.register()
+            } else {
+                try SMAppService.mainApp.unregister()
             }
+        } catch {
+            Logger.app.error("Failed to update launch at login: \(error)")
         }
     }
 }

@@ -9,6 +9,7 @@ import AppKit
 import Carbon
 import Foundation
 import UserNotifications
+import OSLog
 
 /// Manages global keyboard shortcuts for triggering resolution presets.
 ///
@@ -33,10 +34,10 @@ final class KeyboardShortcutManager {
     }
 
     init(
-        _ displayManager: any DisplayManaging,
-        _ settingsManager: any SettingsManaging,
-        _ permissionsManager: any PermissionsManaging,
-        _ resolutionOverlayController: ResolutionOverlayController
+        displayManager: any DisplayManaging,
+        settingsManager: any SettingsManaging,
+        permissionsManager: any PermissionsManaging,
+        resolutionOverlayController: ResolutionOverlayController
     ) {
         self.displayManager = displayManager
         self.settingsManager = settingsManager
@@ -79,9 +80,9 @@ final class KeyboardShortcutManager {
         )
 
         if status != noErr {
-            print("Failed to install event handler: \(status)")
+            Logger.app.error("Failed to install event handler: \(status)")
         } else {
-            print("Successfully installed event handler")
+            Logger.app.info("Successfully installed event handler")
         }
     }
 
@@ -111,18 +112,18 @@ final class KeyboardShortcutManager {
 
         // Find the shortcut for this hot key ID
         let hotkeyIDValue = hotKeyID.id
-        print("Hotkey pressed with ID: \(hotkeyIDValue)")
+        Logger.app.info("Hotkey pressed with ID: \(hotkeyIDValue)")
         Task { @MainActor in
             if let entry = registeredHotKeys[hotkeyIDValue] {
-                print("Found registered hotkey: \(entry.shortcut.displayString)")
+                Logger.app.info("Found registered hotkey: \(entry.shortcut.displayString)")
                 if let preset = settingsManager.preset(for: entry.shortcut) {
-                    print("Found preset: \(preset.name)")
+                    Logger.app.info("Found preset: \(preset.name)")
                     applyPreset(preset)
                 } else {
-                    print("No preset found for shortcut")
+                    Logger.app.error("No preset found for shortcut")
                 }
             } else {
-                print("No registered hotkey found for ID \(hotkeyIDValue)")
+                Logger.app.error("No registered hotkey found for ID \(hotkeyIDValue)")
             }
         }
 
@@ -235,13 +236,13 @@ final class KeyboardShortcutManager {
 
         if status == noErr, let ref = hotKeyRef {
             registeredHotKeys[currentID] = (ref: ref, shortcut: shortcut)
-            print(
+            Logger.app.info(
                 "Registered hotkey: \(shortcut.displayString) with ID \(currentID), keyCode: \(shortcut.keyCode), modifiers: \(carbonModifiers)"
             )
             return true
         }
 
-        print(
+        Logger.app.error(
             "Failed to register hot key: \(status), keyCode: \(shortcut.keyCode), modifiers: \(carbonModifiers)"
         )
         return false
@@ -280,38 +281,38 @@ final class KeyboardShortcutManager {
         // Check accessibility permissions
         let hasPermission = permissionsManager.isAccessibilityTrusted
         if !hasPermission {
-            print("⚠️ WARNING: Accessibility permissions not granted. Global hotkeys will not work.")
-            print("   Please grant accessibility access in System Settings > Privacy & Security > Accessibility")
+            Logger.app.error("⚠️ WARNING: Accessibility permissions not granted. Global hotkeys will not work.")
+            Logger.app.error("   Please grant accessibility access in System Settings > Privacy & Security > Accessibility")
             // Don't return - attempt to register anyway as permissions might be pending
         }
 
-        print("Refreshing hotkeys, found \(settingsManager.presets.count) presets")
+        Logger.app.info("Refreshing hotkeys, found \(self.settingsManager.presets.count) presets")
         var successCount = 0
         for preset in settingsManager.presets {
             if let shortcut = preset.keyboardShortcut {
-                print("Registering hotkey for preset '\(preset.name)': \(shortcut.displayString)")
+                Logger.app.info("Registering hotkey for preset '\(preset.name)': \(shortcut.displayString)")
                 let success = registerHotKey(for: shortcut)
                 if success {
-                    print("  ✓ Successfully registered")
+                    Logger.app.info("  ✓ Successfully registered")
                     successCount += 1
                 } else {
-                    print("  ✗ Failed to register")
+                    Logger.app.error("  ✗ Failed to register")
                 }
             } else {
-                print("Preset '\(preset.name)' has no keyboard shortcut")
+                Logger.app.info("Preset '\(preset.name)' has no keyboard shortcut")
             }
         }
-        print("Hotkey registration complete. Total registered: \(registeredHotKeys.count)/\(successCount) attempted")
+        Logger.app.info("Hotkey registration complete. Total registered: \(self.registeredHotKeys.count)/\(successCount) attempted")
         
         // If we failed to register some hotkeys, schedule a retry
         let expectedCount = settingsManager.presets.filter { $0.keyboardShortcut != nil }.count
         if registeredHotKeys.count < expectedCount {
-            print("⚠️ Not all hotkeys registered. Will retry in 2 seconds...")
+            Logger.app.error("⚠️ Not all hotkeys registered. Will retry in 2 seconds...")
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
                 guard let self = self else { return }
                 // Only retry if we still don't have all shortcuts
                 if self.registeredHotKeys.count < expectedCount {
-                    print("Retrying hotkey registration...")
+                    Logger.app.info("Retrying hotkey registration...")
                     self.refreshHotKeys()
                 }
             }

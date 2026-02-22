@@ -6,6 +6,7 @@
 //
 
 import AppKit
+import OSLog
 import SwiftUI
 
 /// Application delegate that initializes core app components.
@@ -18,18 +19,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     var container: Container!
     
     private lazy var keyboardShortcutManager = KeyboardShortcutManager(
-        container.displayManager,
-        container.settingsManager,
-        container.permissionsManager,
-        resolutionOverlayController
+        displayManager: container.displayManager,
+        settingsManager: container.settingsManager,
+        permissionsManager: container.permissionsManager,
+        resolutionOverlayController: resolutionOverlayController
     )
     private lazy var menuBarController = MenuBarController(
-        container.displayManager,
-        resolutionOverlayController,
-        container.settingsManager
+        displayManager: container.displayManager,
+        resolutionOverlayController: resolutionOverlayController,
+        settingsManager: container.settingsManager
     )
-    private lazy var onboardingWindowController = OnboardingWindowController(container.permissionsManager)
-    private lazy var resolutionOverlayController = ResolutionOverlayController(container.settingsManager)
+    private lazy var onboardingWindowController = OnboardingWindowController(
+        permissions: container.permissionsManager
+    )
+    private lazy var resolutionOverlayController = ResolutionOverlayController(
+        settingsManager: container.settingsManager
+    )
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         guard !ProcessInfo.processInfo.isSwiftUIPreview else { return }
@@ -38,13 +43,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menuBarController.setupStatusItem()
         
         // Configure settings factory closure
-        menuBarController.makeSettingsViewController = {
-            NSHostingController(
+        menuBarController.makeSettingsViewController = { [weak self] in
+            guard let self else { return nil }
+            return NSHostingController(
                 rootView: SettingsView(
                     displayManager: self.container.displayManager,
                     settingsManager: self.container.settingsManager,
                     onPresetsChanged: { [weak self] in
-                        self?.updateMenuBarAndShortcutsForPresets()
+                        self?.updateMenuBarAndKeyboardShortcuts()
                     }
                 )
             )
@@ -73,7 +79,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             onboardingWindowController.show(startOnPage: forceOnboarding ? 0 : 1)
         }
         #else
-        if !permissionsManager.isAccessibilityTrusted {
+        if !container.permissionsManager.isAccessibilityTrusted {
             onboardingWindowController.show(startOnPage: 1)
         }
         #endif
@@ -104,14 +110,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 // Only re-register if we don't have all shortcuts registered
                 let expectedShortcutCount = self.container.settingsManager.presets.filter { $0.keyboardShortcut != nil }.count
                 if self.keyboardShortcutManager.registeredHotKeyCount != expectedShortcutCount {
-                    print("App became active - re-registering shortcuts (expected: \(expectedShortcutCount), current: \(self.keyboardShortcutManager.registeredHotKeyCount))")
+                    Logger.app.info("App became active - re-registering shortcuts (expected: \(expectedShortcutCount), current: \(self.keyboardShortcutManager.registeredHotKeyCount))")
                     self.keyboardShortcutManager.refreshHotKeys()
                 }
             }
         }
     }
     
-    func updateMenuBarAndShortcutsForPresets() {
+    /// Rebuilds the menu and keyboard shortcuts.
+    ///
+    /// Must be called any time the resolution presets change.
+    func updateMenuBarAndKeyboardShortcuts() {
         menuBarController.rebuildMenu()
         keyboardShortcutManager.refreshHotKeys()
     }

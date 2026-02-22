@@ -7,6 +7,7 @@
 
 import Foundation
 import CoreGraphics
+import OSLog
 
 /// A saved preset containing display configurations and an optional keyboard shortcut.
 ///
@@ -46,15 +47,15 @@ struct ResolutionPreset: Codable, Identifiable {
             // First, try to find the display with the stored ID
             if let display = displayManager.displays.first(where: { $0.id == storedDisplayID }) {
                 configurations.append((displayID: display.id, mode: config.mode))
-                print("✓ Matched preset display \(storedDisplayID) directly")
+                Logger.app.info("✓ Matched preset display \(storedDisplayID) directly")
             } else {
                 // Display ID changed - try to find a matching display by characteristics
-                print("⚠️ Display ID \(storedDisplayID) not found, attempting to match by characteristics...")
+                Logger.app.error("⚠️ Display ID \(storedDisplayID) not found, attempting to match by characteristics...")
                 
                 // If there's only one display, use it
                 if displayManager.displays.count == 1 {
                     let display = displayManager.displays[0]
-                    print("  → Using only available display: \(display.name) (ID: \(display.id))")
+                    Logger.app.info("  → Using only available display: \(display.name) (ID: \(display.id))")
                     configurations.append((displayID: display.id, mode: config.mode))
                 } else {
                     // Multiple displays - try to match by checking if the mode exists
@@ -62,7 +63,7 @@ struct ResolutionPreset: Codable, Identifiable {
                     for display in displayManager.displays {
                         // Check if this display has the requested mode
                         if display.modes.contains(where: { $0 == config.mode }) {
-                            print("  → Matched display by available mode: \(display.name) (ID: \(display.id))")
+                            Logger.app.info("  → Matched display by available mode: \(display.name) (ID: \(display.id))")
                             configurations.append((displayID: display.id, mode: config.mode))
                             foundMatch = true
                             break
@@ -70,7 +71,7 @@ struct ResolutionPreset: Codable, Identifiable {
                     }
                     
                     if !foundMatch {
-                        print("  ✗ Could not find matching display for mode: \(config.mode.displayString)")
+                        Logger.app.error("  ✗ Could not find matching display for mode: \(config.mode.displayString)")
                         return nil
                     }
                 }

@@ -24,12 +24,12 @@ final class MenuBarController: NSObject {
     private var menu: NSMenu!
     private var settingsWindow: NSWindow?
     
-    var makeSettingsViewController: (() -> NSViewController)?
+    var makeSettingsViewController: (() -> NSViewController?)?
 
     init(
-        _ displayManager: any DisplayManaging,
-        _ resolutionOverlayController: ResolutionOverlayController,
-        _ settingsManager: any SettingsManaging
+        displayManager: any DisplayManaging,
+        resolutionOverlayController: ResolutionOverlayController,
+        settingsManager: any SettingsManaging
     ) {
         self.displayManager = displayManager
         self.settingsManager = settingsManager
@@ -392,7 +392,9 @@ final class MenuBarController: NSObject {
     }
     
     private func makeSettingsWindow() -> NSWindow {
-        let hostingController = makeSettingsViewController!()
+        guard let factory = makeSettingsViewController, let hostingController = factory() else {
+            fatalError("AppDelegate did not properly configure MenuBarController")
+        }
 
         let contentSize = NSSize(
             width: SettingsViewMetrics.size.width,

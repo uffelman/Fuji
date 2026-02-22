@@ -20,7 +20,7 @@ final class ResolutionOverlayController {
     
     private let settingsManager: any SettingsManaging
 
-    init(_ settingsManager: any SettingsManaging) {
+    init(settingsManager: any SettingsManaging) {
         self.settingsManager = settingsManager
     }
 
@@ -125,7 +125,10 @@ final class ResolutionOverlayController {
             context.timingFunction = CAMediaTimingFunction(name: .easeIn)
             window?.animator().alphaValue = 0
         }, completionHandler: { [weak self] in
-            self?.window?.orderOut(nil)
+            guard let self else { return }
+            Task { @MainActor in
+                self.window?.orderOut(nil)
+            }
         })
     }
 }

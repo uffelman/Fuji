@@ -9,9 +9,7 @@ import AppKit
 import CoreGraphics
 import Foundation
 import IOKit
-
-import CoreGraphics
-import Foundation
+import OSLog
 
 @MainActor
 protocol DisplayManaging: AnyObject {
@@ -80,7 +78,7 @@ final class DisplayManager: DisplayManaging {
 
         let result = CGGetActiveDisplayList(16, &displayIDs, &displayCount)
         guard result == .success else {
-            print("Failed to get display list: \(result)")
+            Logger.app.error("Failed to get display list: \(result.rawValue)")
             return
         }
 
@@ -396,27 +394,27 @@ final class DisplayManager: DisplayManaging {
         }
 
         guard let cgMode = targetMode else {
-            print("Could not find matching display mode")
+            Logger.app.error("Could not find matching display mode")
             return false
         }
 
         var config: CGDisplayConfigRef?
         var result = CGBeginDisplayConfiguration(&config)
         guard result == .success, let config = config else {
-            print("Failed to begin display configuration: \(result)")
+            Logger.app.error("Failed to begin display configuration: \(result.rawValue)")
             return false
         }
 
         result = CGConfigureDisplayWithDisplayMode(config, displayID, cgMode, nil)
         guard result == .success else {
             CGCancelDisplayConfiguration(config)
-            print("Failed to configure display mode: \(result)")
+            Logger.app.error("Failed to configure display mode: \(result.rawValue)")
             return false
         }
 
         result = CGCompleteDisplayConfiguration(config, .permanently)
         guard result == .success else {
-            print("Failed to complete display configuration: \(result)")
+            Logger.app.error("Failed to complete display configuration: \(result.rawValue)")
             return false
         }
 
@@ -446,7 +444,7 @@ final class DisplayManager: DisplayManaging {
         var config: CGDisplayConfigRef?
         var result = CGBeginDisplayConfiguration(&config)
         guard result == .success, let config = config else {
-            print("Failed to begin display configuration: \(result)")
+            Logger.app.error("Failed to begin display configuration: \(result.rawValue)")
             return false
         }
 
@@ -467,21 +465,21 @@ final class DisplayManager: DisplayManaging {
 
             guard let cgMode = targetMode else {
                 CGCancelDisplayConfiguration(config)
-                print("Could not find matching display mode for display \(displayID)")
+                Logger.app.error("Could not find matching display mode for display \(displayID)")
                 return false
             }
 
             result = CGConfigureDisplayWithDisplayMode(config, displayID, cgMode, nil)
             guard result == .success else {
                 CGCancelDisplayConfiguration(config)
-                print("Failed to configure display mode: \(result)")
+                Logger.app.error("Failed to configure display mode: \(result.rawValue)")
                 return false
             }
         }
 
         result = CGCompleteDisplayConfiguration(config, .permanently)
         guard result == .success else {
-            print("Failed to complete display configuration: \(result)")
+            Logger.app.error("Failed to complete display configuration: \(result.rawValue)")
             return false
         }
 

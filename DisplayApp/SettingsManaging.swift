@@ -6,6 +6,7 @@
 //
 
 import AppKit
+import OSLog
 import SwiftUI
 
 @MainActor
@@ -77,7 +78,7 @@ final class SettingsManager: SettingsManaging {
         do {
             presets = try JSONDecoder().decode([ResolutionPreset].self, from: data)
         } catch {
-            print("Failed to decode presets: \(error)")
+            Logger.app.error("Failed to decode presets: \(error)")
             presets = []
         }
     }
@@ -98,7 +99,7 @@ final class SettingsManager: SettingsManaging {
             let data = try JSONEncoder().encode(presets)
             UserDefaults.standard.set(data, forKey: presetsKey)
         } catch {
-            print("Failed to encode presets: \(error)")
+            Logger.app.error("Failed to encode presets: \(error)")
         }
     }
 
