@@ -5,7 +5,6 @@
 //  Created by Stephen Uffelman on 2/19/26.
 //
 
-import Foundation
 import SwiftUI
 
 /// A sheet view for creating or editing a resolution preset.

@@ -15,17 +15,21 @@ import SwiftUI
 /// and coordinates with DisplayManager for resolution changes.
 @MainActor
 final class MenuBarController: NSObject {
+    
+    private let displayManager: any DisplayManaging
+    private let resolutionOverlayController: ResolutionOverlayController
+    private let settingsManager: any SettingsManaging
+    
     private var statusItem: NSStatusItem!
     private var menu: NSMenu!
-    private let displayManager: any DisplayManaging
-    private let settingsManager: any SettingsManaging
     private var settingsWindow: NSWindow?
-    private let resolutionOverlayController: ResolutionOverlayController
+    
+    var makeSettingsViewController: (() -> NSViewController)?
 
     init(
         _ displayManager: any DisplayManaging,
-        _ settingsManager: any SettingsManaging,
-        _ resolutionOverlayController: ResolutionOverlayController
+        _ resolutionOverlayController: ResolutionOverlayController,
+        _ settingsManager: any SettingsManaging
     ) {
         self.displayManager = displayManager
         self.settingsManager = settingsManager
@@ -383,8 +387,28 @@ final class MenuBarController: NSObject {
     /// Opens the settings window.
     @objc private func openSettings() {
         // Use the legacy window approach since SwiftUI Settings scene
-        // cannot be opened reliably from outside SwiftUI
+        // cannot be opened reliably from outside SwiftUI.
         openSettingsWindowLegacy()
+    }
+    
+    private func makeSettingsWindow() -> NSWindow {
+        let hostingController = makeSettingsViewController!()
+
+        let contentSize = NSSize(
+            width: SettingsViewMetrics.size.width,
+            height: SettingsViewMetrics.size.height
+        )
+
+        let settingsWindow = NSWindow(contentViewController: hostingController)
+        settingsWindow.title = "DisplayApp Settings"
+        settingsWindow.styleMask = [.titled, .closable, .miniaturizable]
+        settingsWindow.setContentSize(contentSize)
+        settingsWindow.minSize = contentSize
+        settingsWindow.maxSize = contentSize
+        settingsWindow.center()
+        settingsWindow.isReleasedWhenClosed = false
+        
+        return settingsWindow
     }
 
     /// Creates and displays a standalone settings window using NSHostingController.
@@ -393,32 +417,8 @@ final class MenuBarController: NSObject {
     /// is not reliably accessible from outside SwiftUI contexts.
     private func openSettingsWindowLegacy() {
         if settingsWindow == nil {
-            let settingsView = SettingsView(
-                displayManager: displayManager,
-                settingsManager: settingsManager,
-                onPresetsChanged: { [weak self] in
-                    self?.rebuildMenu()
-                }
-            )
-
-            let hostingController = NSHostingController(rootView: settingsView)
-            hostingController.sizingOptions = []
-
-            let contentSize = NSSize(
-                width: SettingsView.size.width,
-                height: SettingsView.size.height
-            )
-
-            settingsWindow = NSWindow(contentViewController: hostingController)
-            settingsWindow?.title = "DisplayApp Settings"
-            settingsWindow?.styleMask = [.titled, .closable, .miniaturizable]
-            settingsWindow?.setContentSize(contentSize)
-            settingsWindow?.minSize = contentSize
-            settingsWindow?.maxSize = contentSize
-            settingsWindow?.center()
-            settingsWindow?.isReleasedWhenClosed = false
+            settingsWindow = makeSettingsWindow()
         }
-
         NSApp.activate(ignoringOtherApps: true)
         settingsWindow?.makeKeyAndOrderFront(nil)
     }

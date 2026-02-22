@@ -27,14 +27,11 @@ struct DisplayAppApp: App {
             SettingsView(
                 displayManager: container.displayManager,
                 settingsManager: container.settingsManager,
-                onPresetsChanged: {
-                    // Rebuild menu when presets change
-                    NotificationCenter.default.post(name: .presetsDidChange, object: nil)
-                }
+                onPresetsChanged: appDelegate.updateMenuBarAndShortcutsForPresets
             )
             .frame(
-                width: SettingsView.size.width,
-                height: SettingsView.size.height
+                width: SettingsViewMetrics.size.width,
+                height: SettingsViewMetrics.size.height
             )
         }
     }

@@ -321,7 +321,7 @@ final class DisplayManager: DisplayManaging {
             guard cgMode.isUsableForDesktopGUI() else { continue }
 
             let mode = DisplayMode(
-                modeNumber: Int32(index),
+                modeNumber: index,
                 width: width,
                 height: height,
                 refreshRate: refreshRate,

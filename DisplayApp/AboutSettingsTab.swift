@@ -5,7 +5,6 @@
 //  Created by Stephen Uffelman on 2/19/26.
 //
 
-import Foundation
 import SwiftUI
 
 /// The about tab showing app information.
@@ -25,7 +24,7 @@ struct AboutSettingsTab: View {
                     .clipShape(.rect(cornerRadius: 18 / 80 * iconSize, style: .continuous))
                     .shadow(color: .accentColor.opacity(0.2), radius: 10, y: 4)
                     .frame(maxHeight: .infinity, alignment: .top)
-                    .padding(.top, -10)
+                    .offset(y: -10)
                 
                 VStack(alignment: .leading) {
                     // App name

@@ -6,7 +6,7 @@
 //
 
 import AppKit
-import Foundation
+import SwiftUI
 
 /// Application delegate that initializes core app components.
 ///
@@ -16,12 +16,39 @@ import Foundation
 final class AppDelegate: NSObject, NSApplicationDelegate {
     
     var container: Container!
+    
+    private lazy var keyboardShortcutManager = KeyboardShortcutManager(
+        container.displayManager,
+        container.settingsManager,
+        container.permissionsManager,
+        resolutionOverlayController
+    )
+    private lazy var menuBarController = MenuBarController(
+        container.displayManager,
+        resolutionOverlayController,
+        container.settingsManager
+    )
+    private lazy var onboardingWindowController = OnboardingWindowController(container.permissionsManager)
+    private lazy var resolutionOverlayController = ResolutionOverlayController(container.settingsManager)
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         guard !ProcessInfo.processInfo.isSwiftUIPreview else { return }
         
         // Show item in menu bar
-        container.menuBarController.setupStatusItem()
+        menuBarController.setupStatusItem()
+        
+        // Configure settings factory closure
+        menuBarController.makeSettingsViewController = {
+            NSHostingController(
+                rootView: SettingsView(
+                    displayManager: self.container.displayManager,
+                    settingsManager: self.container.settingsManager,
+                    onPresetsChanged: { [weak self] in
+                        self?.updateMenuBarAndShortcutsForPresets()
+                    }
+                )
+            )
+        }
         
         // Hide dock icon by default (menu bar app)
         if !container.settingsManager.showInDock {
@@ -43,7 +70,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if forceOnboarding || !container.permissionsManager.isAccessibilityTrusted {
             // Full welcome flow when force-enabled so the developer can preview both pages;
             // permissions-only page when triggered naturally by missing access.
-            container.onboardingWindowController.show(startOnPage: forceOnboarding ? 0 : 1)
+            onboardingWindowController.show(startOnPage: forceOnboarding ? 0 : 1)
         }
         #else
         if !permissionsManager.isAccessibilityTrusted {
@@ -55,26 +82,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // This is especially important when the app launches at login
         Task { @MainActor [weak self] in
             try? await Task.sleep(for: .milliseconds(500))
-            self?.container.keyboardShortcutManager.refreshHotKeys()
+            self?.keyboardShortcutManager.refreshHotKeys()
         }
 
         // Handle shortcut triggers
-        container.keyboardShortcutManager.onShortcutTriggered = { [weak self] _ in
+        keyboardShortcutManager.onShortcutTriggered = { [weak self] _ in
             MainActor.assumeIsolated {
-                self?.container.menuBarController.rebuildMenu()
-            }
-        }
-
-        // Listen for preset changes from Settings window
-        NotificationCenter.default.addObserver(
-            forName: .presetsDidChange,
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            MainActor.assumeIsolated {
-                guard let self else { return }
-                self.container.menuBarController.rebuildMenu()
-                self.container.keyboardShortcutManager.refreshHotKeys()
+                self?.menuBarController.rebuildMenu()
             }
         }
         
@@ -89,12 +103,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 guard let self else { return }
                 // Only re-register if we don't have all shortcuts registered
                 let expectedShortcutCount = self.container.settingsManager.presets.filter { $0.keyboardShortcut != nil }.count
-                if self.container.keyboardShortcutManager.registeredHotKeyCount != expectedShortcutCount {
-                    print("App became active - re-registering shortcuts (expected: \(expectedShortcutCount), current: \(self.container.keyboardShortcutManager.registeredHotKeyCount))")
-                    self.container.keyboardShortcutManager.refreshHotKeys()
+                if self.keyboardShortcutManager.registeredHotKeyCount != expectedShortcutCount {
+                    print("App became active - re-registering shortcuts (expected: \(expectedShortcutCount), current: \(self.keyboardShortcutManager.registeredHotKeyCount))")
+                    self.keyboardShortcutManager.refreshHotKeys()
                 }
             }
         }
+    }
+    
+    func updateMenuBarAndShortcutsForPresets() {
+        menuBarController.rebuildMenu()
+        keyboardShortcutManager.refreshHotKeys()
     }
 
     /// Prevents the app from terminating when all windows are closed.

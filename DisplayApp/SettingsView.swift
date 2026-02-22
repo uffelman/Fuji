@@ -11,11 +11,10 @@ import SwiftUI
 /// The main settings view for the application.
 ///
 /// Displays a tab-based interface with sections for managing presets, general settings, and app information.
-struct SettingsView: View {
-    static let size = CGSize(width: 500, height: 470)
+struct SettingsView<DM: DisplayManaging, SM: SettingsManaging>: View {
     
-    let displayManager: any DisplayManaging
-    let settingsManager: any SettingsManaging
+    let displayManager: DM
+    let settingsManager: SM
     let onPresetsChanged: (() -> Void)?
 
     @State private var selectedTab = SettingsTab.presets
@@ -65,6 +64,11 @@ struct SettingsView: View {
         .padding(.bottom)
         .frame(minWidth: 500, minHeight: 400)
     }
+}
+
+/// Layout constants for the settings window.
+enum SettingsViewMetrics {
+    static let size = CGSize(width: 500, height: 470)
 }
 
 /// A single button in the custom settings tab bar.

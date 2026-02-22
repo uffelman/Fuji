@@ -6,16 +6,15 @@
 //
 
 import ApplicationServices
-import Foundation
 import SwiftUI
 
 /// The presets management tab.
 ///
 /// Allows users to create, edit, delete, and reorder resolution presets.
 /// Shows warnings when accessibility permissions are not granted.
-struct PresetsSettingsTab: View {
-    let displayManager: any DisplayManaging
-    let settingsManager: any SettingsManaging
+struct PresetsSettingsTab<DM: DisplayManaging, SM: SettingsManaging>: View {
+    let displayManager: DM
+    let settingsManager: SM
     let onPresetsChanged: (() -> Void)?
 
     @State private var showingAddPreset = false
@@ -171,4 +170,12 @@ private struct AccessibilityPermissionWarning: View {
                 .stroke(Color.orange.opacity(0.3), lineWidth: 1)
         )
     }
+}
+
+#Preview {
+    PresetsSettingsTab(
+        displayManager: MockDisplayManager.preview,
+        settingsManager: MockSettingsManager.preview,
+        onPresetsChanged: nil
+    )
 }

@@ -13,7 +13,7 @@ import Foundation
 /// Display modes are uniquely identified and can be compared for equality based on their properties.
 struct DisplayMode: Identifiable, Hashable, Codable {
     let id: UUID
-    let modeNumber: Int32
+    let modeNumber: Int
     let width: Int
     let height: Int
     let refreshRate: Double
@@ -93,7 +93,7 @@ struct DisplayMode: Identifiable, Hashable, Codable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.id = try container.decode(UUID.self, forKey: .id)
-        self.modeNumber = try container.decode(Int32.self, forKey: .modeNumber)
+        self.modeNumber = try container.decode(Int.self, forKey: .modeNumber)
         self.width = try container.decode(Int.self, forKey: .width)
         self.height = try container.decode(Int.self, forKey: .height)
         self.refreshRate = try container.decode(Double.self, forKey: .refreshRate)
@@ -103,7 +103,7 @@ struct DisplayMode: Identifiable, Hashable, Codable {
     }
 
     init(
-        modeNumber: Int32, width: Int, height: Int, refreshRate: Double, isHiDPI: Bool,
+        modeNumber: Int, width: Int, height: Int, refreshRate: Double, isHiDPI: Bool,
         bitDepth: Int
     ) {
         self.id = UUID()

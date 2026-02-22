@@ -6,9 +6,9 @@
 //
 
 import AppKit
-import Foundation
 import SwiftUI
 
+@MainActor
 protocol SettingsManaging: AnyObject {
     
     var launchAtLogin: Bool { get set }
@@ -160,6 +160,8 @@ final class SettingsManager: SettingsManaging {
     }
 }
 
+@MainActor
+@Observable
 final class MockSettingsManager: SettingsManaging {
     static let preview = MockSettingsManager()
     
@@ -179,9 +181,4 @@ final class MockSettingsManager: SettingsManaging {
     func movePreset(from source: IndexSet, to destination: Int) {}
     
     func preset(for shortcut: KeyboardShortcut) -> ResolutionPreset? { nil }
-}
-
-/// Notification name posted when presets are modified.
-extension Notification.Name {
-    static let presetsDidChange = Notification.Name("presetsDidChange")
 }
