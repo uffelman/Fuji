@@ -60,7 +60,6 @@ protocol DisplayManaging: AnyObject {
 final class DisplayManager: DisplayManaging {
     
     private(set) var displays: [Display] = []
-    private var displayReconfigurationCallback: CGDisplayReconfigurationCallBack?
 
     init() {
         refreshDisplays()
@@ -516,24 +515,30 @@ final class DisplayManager: DisplayManaging {
     /// mode changes, display additions, and removals. When triggered, it automatically
     /// refreshes the display list on the main actor.
     private func registerForDisplayChanges() {
-        CGDisplayRegisterReconfigurationCallback(displayCallback, UnsafeMutableRawPointer(Unmanaged.passUnretained(self).toOpaque()))
-    }
-    
-    private let displayCallback: CGDisplayReconfigurationCallBack = { displayID, flags, userInfo in
-        guard
-            let userInfo,
-            flags.contains(.setModeFlag) || flags.contains(.addFlag) || flags.contains(.removeFlag)
-        else { return }
-        
-        let instance = Unmanaged<DisplayManager>.fromOpaque(userInfo).takeUnretainedValue()
-        
-        Task { @MainActor in
-            instance.refreshDisplays()
-        }
+        let pointer = UnsafeMutableRawPointer(Unmanaged.passUnretained(self).toOpaque())
+        CGDisplayRegisterReconfigurationCallback(displayReconfigurationCallback, pointer)
     }
 
     nonisolated private func unregisterDisplayChanges() {
-        CGDisplayRemoveReconfigurationCallback({ _, _, _ in }, nil)
+        let pointer = UnsafeMutableRawPointer(Unmanaged.passUnretained(self).toOpaque())
+        CGDisplayRemoveReconfigurationCallback(displayReconfigurationCallback, pointer)
+    }
+}
+
+nonisolated private func displayReconfigurationCallback(
+    _ displayID: CGDirectDisplayID,
+    _ flags: CGDisplayChangeSummaryFlags,
+    _ userInfo: UnsafeMutableRawPointer?
+) {
+    guard
+        let userInfo,
+        flags.contains(.setModeFlag) || flags.contains(.addFlag) || flags.contains(.removeFlag)
+    else { return }
+
+    let instance = Unmanaged<DisplayManager>.fromOpaque(userInfo).takeUnretainedValue()
+
+    Task { @MainActor in
+        instance.refreshDisplays()
     }
 }
 
