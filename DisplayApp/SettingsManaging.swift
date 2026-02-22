@@ -60,6 +60,7 @@ final class SettingsManager: SettingsManaging {
     }
 
     init() {
+        registerDefaults()
         loadPresets()
     }
 
@@ -79,6 +80,14 @@ final class SettingsManager: SettingsManaging {
             print("Failed to decode presets: \(error)")
             presets = []
         }
+    }
+    
+    private func registerDefaults() {
+        UserDefaults.standard.register(defaults: [
+            launchAtLoginKey: false,
+            showInDockKey: false,
+            showResolutionOverlayKey: true
+        ])
     }
 
     /// Saves the current presets to UserDefaults.
