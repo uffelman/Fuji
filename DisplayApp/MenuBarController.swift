@@ -17,15 +17,15 @@ import SwiftUI
 final class MenuBarController: NSObject {
     private var statusItem: NSStatusItem!
     private var menu: NSMenu!
-    private let displayManager: DisplayManager
+    private let displayManager: any DisplayManaging
     private let settingsManager: any SettingsManaging
     private var settingsWindow: NSWindow?
     private let resolutionOverlayController: ResolutionOverlayController
 
     init(
-        displayManager: DisplayManager,
-        settingsManager: any SettingsManaging,
-        resolutionOverlayController: ResolutionOverlayController
+        _ displayManager: any DisplayManaging,
+        _ settingsManager: any SettingsManaging,
+        _ resolutionOverlayController: ResolutionOverlayController
     ) {
         self.displayManager = displayManager
         self.settingsManager = settingsManager

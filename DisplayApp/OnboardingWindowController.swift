@@ -20,7 +20,7 @@ final class OnboardingWindowController: NSObject, NSWindowDelegate {
     private var window: NSWindow?
     private let permissions: any PermissionsManaging
 
-    init(permissions: any PermissionsManaging) {
+    init(_ permissions: any PermissionsManaging) {
         self.permissions = permissions
     }
 

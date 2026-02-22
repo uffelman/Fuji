@@ -14,36 +14,14 @@ import Foundation
 /// app lifecycle events including launch-time initialization and accessibility permissions.
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    var displayManager: DisplayManager!
-    private var keyboardShortcutManager: KeyboardShortcutManager!
-    private var menuBarController: MenuBarController!
-    var permissionsManager: PermissionsManager!
-    var settingsManager: SettingsManaging!
-    private var onboardingWindowController: OnboardingWindowController!
-    private var resolutionOverlayController: ResolutionOverlayController!
+    
+    var container: Container!
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         guard !ProcessInfo.processInfo.isSwiftUIPreview else { return }
         
-        resolutionOverlayController = ResolutionOverlayController(settingsManager: settingsManager)
-        
-        keyboardShortcutManager = KeyboardShortcutManager(
-            displayManager: displayManager,
-            settingsManager: settingsManager,
-            permissionsManager: permissionsManager,
-            resolutionOverlayController: resolutionOverlayController
-        )
-        
-        menuBarController = MenuBarController(
-            displayManager: displayManager,
-            settingsManager: settingsManager,
-            resolutionOverlayController: resolutionOverlayController
-        )
-        
-        onboardingWindowController = OnboardingWindowController(permissions: permissionsManager)
-        
         // Hide dock icon by default (menu bar app)
-        if !settingsManager.showInDock {
+        if !container.settingsManager.showInDock {
             NSApplication.shared.setActivationPolicy(.accessory)
         }
 
@@ -59,10 +37,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // (startOnPage: 0) to show at every launch regardless of permission state.
         #if DEBUG
         let forceOnboarding = UserDefaults.standard.bool(forKey: DebugSettings.forceOnboardingKey)
-        if forceOnboarding || !permissionsManager.isAccessibilityTrusted {
+        if forceOnboarding || !container.permissionsManager.isAccessibilityTrusted {
             // Full welcome flow when force-enabled so the developer can preview both pages;
             // permissions-only page when triggered naturally by missing access.
-            onboardingWindowController.show(startOnPage: forceOnboarding ? 0 : 1)
+            container.onboardingWindowController.show(startOnPage: forceOnboarding ? 0 : 1)
         }
         #else
         if !permissionsManager.isAccessibilityTrusted {
@@ -70,19 +48,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         #endif
 
-        
-
         // Register existing shortcuts with a slight delay to ensure system is ready
         // This is especially important when the app launches at login
         Task { @MainActor [weak self] in
             try? await Task.sleep(for: .milliseconds(500))
-            self?.keyboardShortcutManager.refreshHotKeys()
+            self?.container.keyboardShortcutManager.refreshHotKeys()
         }
 
         // Handle shortcut triggers
-        keyboardShortcutManager.onShortcutTriggered = { [weak self] _ in
+        container.keyboardShortcutManager.onShortcutTriggered = { [weak self] _ in
             MainActor.assumeIsolated {
-                self?.menuBarController.rebuildMenu()
+                self?.container.menuBarController.rebuildMenu()
             }
         }
 
@@ -94,8 +70,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         ) { [weak self] _ in
             MainActor.assumeIsolated {
                 guard let self else { return }
-                self.menuBarController.rebuildMenu()
-                self.keyboardShortcutManager.refreshHotKeys()
+                self.container.menuBarController.rebuildMenu()
+                self.container.keyboardShortcutManager.refreshHotKeys()
             }
         }
         
@@ -109,10 +85,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             MainActor.assumeIsolated {
                 guard let self else { return }
                 // Only re-register if we don't have all shortcuts registered
-                let expectedShortcutCount = self.settingsManager.presets.filter { $0.keyboardShortcut != nil }.count
-                if self.keyboardShortcutManager.registeredHotKeyCount != expectedShortcutCount {
-                    print("App became active - re-registering shortcuts (expected: \(expectedShortcutCount), current: \(self.keyboardShortcutManager.registeredHotKeyCount))")
-                    self.keyboardShortcutManager.refreshHotKeys()
+                let expectedShortcutCount = self.container.settingsManager.presets.filter { $0.keyboardShortcut != nil }.count
+                if self.container.keyboardShortcutManager.registeredHotKeyCount != expectedShortcutCount {
+                    print("App became active - re-registering shortcuts (expected: \(expectedShortcutCount), current: \(self.container.keyboardShortcutManager.registeredHotKeyCount))")
+                    self.container.keyboardShortcutManager.refreshHotKeys()
                 }
             }
         }

@@ -21,7 +21,7 @@ final class KeyboardShortcutManager {
     private var registeredHotKeys: [UInt32: (ref: EventHotKeyRef, shortcut: KeyboardShortcut)] = [:]
     private var nextHotKeyID: UInt32 = 1
 
-    private let displayManager: DisplayManager
+    private let displayManager: any DisplayManaging
     private let settingsManager: any SettingsManaging
     private let permissionsManager: any PermissionsManaging
     private let resolutionOverlayController: ResolutionOverlayController
@@ -33,10 +33,10 @@ final class KeyboardShortcutManager {
     }
 
     init(
-        displayManager: DisplayManager,
-        settingsManager: any SettingsManaging,
-        permissionsManager: any PermissionsManaging,
-        resolutionOverlayController: ResolutionOverlayController
+        _ displayManager: any DisplayManaging,
+        _ settingsManager: any SettingsManaging,
+        _ permissionsManager: any PermissionsManaging,
+        _ resolutionOverlayController: ResolutionOverlayController
     ) {
         self.displayManager = displayManager
         self.settingsManager = settingsManager

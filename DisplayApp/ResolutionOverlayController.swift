@@ -20,7 +20,7 @@ final class ResolutionOverlayController {
     
     private let settingsManager: any SettingsManaging
 
-    init(settingsManager: any SettingsManaging) {
+    init(_ settingsManager: any SettingsManaging) {
         self.settingsManager = settingsManager
     }
 

@@ -37,7 +37,7 @@ struct ResolutionPreset: Codable, Identifiable {
     ///
     /// - Parameter displayManager: The display manager with current display information
     /// - Returns: An array of matched configurations, or nil if matching fails
-    func matchConfigurations(to displayManager: DisplayManager) -> [(displayID: CGDirectDisplayID, mode: DisplayMode)]? {
+    func matchConfigurations(to displayManager: any DisplayManaging) -> [(displayID: CGDirectDisplayID, mode: DisplayMode)]? {
         var configurations: [(displayID: CGDirectDisplayID, mode: DisplayMode)] = []
         
         for config in self.configurations {

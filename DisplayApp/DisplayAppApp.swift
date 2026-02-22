@@ -14,31 +14,19 @@ import SwiftUI
 /// Configures the SwiftUI app with a Settings scene for managing display presets and preferences.
 @main
 struct DisplayAppApp: App {
-    private let displayManager: any DisplayManaging
-    private let settingsManager: any SettingsManaging
-    
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     
+    private let container = Container()
+    
     init() {
-        if ProcessInfo.processInfo.isSwiftUIPreview {
-            displayManager = MockDisplayManager.preview
-            settingsManager = MockSettingsManager.preview
-        } else {
-            let displayManager = DisplayManager()
-            self.displayManager = displayManager
-            settingsManager = SettingsManager()
-            
-            appDelegate.displayManager = displayManager
-            appDelegate.permissionsManager = PermissionsManager()
-            appDelegate.settingsManager = settingsManager
-        }
+        appDelegate.container = container
     }
 
     var body: some Scene {
         Settings {
             SettingsView(
-                displayManager: displayManager,
-                settingsManager: settingsManager,
+                displayManager: container.displayManager,
+                settingsManager: container.settingsManager,
                 onPresetsChanged: {
                     // Rebuild menu when presets change
                     NotificationCenter.default.post(name: .presetsDidChange, object: nil)
@@ -50,9 +38,4 @@ struct DisplayAppApp: App {
             )
         }
     }
-}
-
-/// Notification name posted when presets are modified.
-extension Notification.Name {
-    static let presetsDidChange = Notification.Name("presetsDidChange")
 }

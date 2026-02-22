@@ -171,3 +171,8 @@ final class MockSettingsManager: SettingsManaging {
     
     func preset(for shortcut: KeyboardShortcut) -> ResolutionPreset? { nil }
 }
+
+/// Notification name posted when presets are modified.
+extension Notification.Name {
+    static let presetsDidChange = Notification.Name("presetsDidChange")
+}
