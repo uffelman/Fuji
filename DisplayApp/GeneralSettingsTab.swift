@@ -24,7 +24,7 @@ struct GeneralSettingsTab: View {
     // Kept inside the view so the toggle stays reactive.
     // Compiled away entirely in release builds.
     #if DEBUG
-    @State private var forceOnboarding = DebugSettings.forceOnboarding
+    @State private var forceOnboarding = DebugSettings.alwaysShowOnboarding
     #endif
 
     var body: some View {
@@ -89,7 +89,7 @@ struct GeneralSettingsTab: View {
                         label: "Always show onboarding at launch",
                         isOn: $forceOnboarding,
                         onChange: {
-                            DebugSettings.forceOnboarding = $0
+                            DebugSettings.alwaysShowOnboarding = $0
                         }
                     )
                 }
@@ -112,7 +112,7 @@ struct GeneralSettingsTab: View {
             launchAtLogin = settingsManager.launchAtLogin
             showInDock = settingsManager.showInDock
             #if DEBUG
-            forceOnboarding = DebugSettings.forceOnboarding
+            forceOnboarding = DebugSettings.alwaysShowOnboarding
             #endif
         }
     }

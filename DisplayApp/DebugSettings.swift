@@ -15,11 +15,10 @@ import Foundation
 enum DebugSettings {
 
     /// `UserDefaults` key that stores the "always show onboarding" preference.
-    static let forceOnboardingKey = "debug_forceOnboarding"
+    private static let forceOnboardingKey = "debug_forceOnboarding"
 
-    /// Whether the onboarding window should be shown at every launch,
-    /// regardless of the current accessibility permission state.
-    static var forceOnboarding: Bool {
+    /// Whether the onboarding window should be shown at every launch.
+    static var alwaysShowOnboarding: Bool {
         get { UserDefaults.standard.bool(forKey: forceOnboardingKey) }
         set { UserDefaults.standard.set(newValue, forKey: forceOnboardingKey) }
     }

@@ -61,28 +61,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             NSApplication.shared.setActivationPolicy(.accessory)
         }
 
-        // Show onboarding whenever the app launches without accessibility access.
-        // The window is dismissed via its own close button or internal navigation,
-        // and will not reappear until the next launch.
-        //
-        // Because we already know permissions are missing at this point, we skip
-        // straight to the permissions page (startOnPage: 1) so the user is not
-        // presented with a welcome screen they must click through first.
-        //
-        // In debug builds, the developer toggle can force the full welcome flow
-        // (startOnPage: 0) to show at every launch regardless of permission state.
+        // Show onboarding once on first launch. After the user has seen it,
+        // it will not appear again unless the debug toggle forces it.
+        let hasCompletedOnboarding = UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
         #if DEBUG
-        let forceOnboarding = UserDefaults.standard.bool(forKey: DebugSettings.forceOnboardingKey)
-        if forceOnboarding || !container.permissionsManager.isAccessibilityTrusted {
-            // Full welcome flow when force-enabled so the developer can preview both pages;
-            // permissions-only page when triggered naturally by missing access.
-            onboardingWindowController.show(startOnPage: forceOnboarding ? 0 : 1)
-        }
+        let forceOnboarding = DebugSettings.alwaysShowOnboarding
+        let shouldShowOnboarding = forceOnboarding || !hasCompletedOnboarding
         #else
-        if !container.permissionsManager.isAccessibilityTrusted {
-            onboardingWindowController.show(startOnPage: 1)
-        }
+        let shouldShowOnboarding = !hasCompletedOnboarding
         #endif
+        if shouldShowOnboarding {
+            onboardingWindowController.show(startOnPage: 0)
+            UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
+        }
 
         // Register existing shortcuts with a slight delay to ensure system is ready
         // This is especially important when the app launches at login
