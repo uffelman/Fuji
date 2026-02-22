@@ -44,7 +44,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         #else
         if !permissionsManager.isAccessibilityTrusted {
-            onboardingController.show(startOnPage: 1)
+            onboardingWindowController.show(startOnPage: 1)
         }
         #endif
 
