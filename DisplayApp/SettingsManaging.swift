@@ -6,8 +6,24 @@
 //
 
 import AppKit
-import Foundation
+import OSLog
 import SwiftUI
+
+@MainActor
+protocol SettingsManaging: AnyObject {
+    
+    var launchAtLogin: Bool { get set }
+    var presets: [ResolutionPreset] { get }
+    var showInDock: Bool { get set }
+    var showResolutionOverlay: Bool { get set }
+    
+    func addPreset(_ preset: ResolutionPreset)
+    func updatePreset(_ preset: ResolutionPreset)
+    func deletePreset(_ preset: ResolutionPreset)
+    func deletePreset(at offsets: IndexSet)
+    func movePreset(from source: IndexSet, to destination: Int)
+    func preset(for shortcut: KeyboardShortcut) -> ResolutionPreset?
+}
 
 /// Manages app settings and resolution presets.
 ///
@@ -15,12 +31,12 @@ import SwiftUI
 /// launch at login settings, and dock visibility. Settings are stored using UserDefaults.
 @MainActor
 @Observable
-final class SettingsManager {
-    static let shared = SettingsManager()
-
+final class SettingsManager: SettingsManaging {
+    
     private let presetsKey = "displayPresets"
     private let launchAtLoginKey = "launchAtLogin"
     private let showInDockKey = "showInDock"
+    private let showResolutionOverlayKey = "showResolutionOverlay"
 
     private(set) var presets: [ResolutionPreset] = []
 
@@ -36,8 +52,16 @@ final class SettingsManager {
             updateDockVisibility()
         }
     }
+    
+    var showResolutionOverlay: Bool {
+        get { UserDefaults.standard.bool(forKey: showResolutionOverlayKey) }
+        set {
+            UserDefaults.standard.set(newValue, forKey: showResolutionOverlayKey)
+        }
+    }
 
     init() {
+        registerDefaults()
         loadPresets()
     }
 
@@ -54,9 +78,17 @@ final class SettingsManager {
         do {
             presets = try JSONDecoder().decode([ResolutionPreset].self, from: data)
         } catch {
-            print("Failed to decode presets: \(error)")
+            Logger.app.error("Failed to decode presets: \(error)")
             presets = []
         }
+    }
+    
+    private func registerDefaults() {
+        UserDefaults.standard.register(defaults: [
+            launchAtLoginKey: false,
+            showInDockKey: false,
+            showResolutionOverlayKey: true
+        ])
     }
 
     /// Saves the current presets to UserDefaults.
@@ -67,7 +99,7 @@ final class SettingsManager {
             let data = try JSONEncoder().encode(presets)
             UserDefaults.standard.set(data, forKey: presetsKey)
         } catch {
-            print("Failed to encode presets: \(error)")
+            Logger.app.error("Failed to encode presets: \(error)")
         }
     }
 
@@ -127,4 +159,27 @@ final class SettingsManager {
             NSApplication.shared.setActivationPolicy(.accessory)
         }
     }
+}
+
+@MainActor
+@Observable
+final class MockSettingsManager: SettingsManaging {
+    static let preview = MockSettingsManager()
+    
+    var presets: [ResolutionPreset] = []
+    var launchAtLogin = false
+    var showInDock = false
+    var showResolutionOverlay = true
+    
+    func addPreset(_ preset: ResolutionPreset) {}
+    
+    func updatePreset(_ preset: ResolutionPreset) {}
+    
+    func deletePreset(_ preset: ResolutionPreset) {}
+    
+    func deletePreset(at offsets: IndexSet) {}
+    
+    func movePreset(from source: IndexSet, to destination: Int) {}
+    
+    func preset(for shortcut: KeyboardShortcut) -> ResolutionPreset? { nil }
 }

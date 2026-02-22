@@ -15,23 +15,24 @@ import SwiftUI
 @main
 struct DisplayAppApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    
+    private let container = Container()
+    
+    init() {
+        appDelegate.container = container
+    }
 
     var body: some Scene {
         Settings {
             SettingsView(
-                displayManager: DisplayManager.shared,
-                settingsManager: SettingsManager.shared,
-                onPresetsChanged: {
-                    // Rebuild menu when presets change
-                    NotificationCenter.default.post(name: .presetsDidChange, object: nil)
-                }
+                displayManager: container.displayManager,
+                settingsManager: container.settingsManager,
+                onPresetsChanged: appDelegate.updateMenuBarAndKeyboardShortcuts
             )
-            .frame(minWidth: 500, minHeight: 400)
+            .frame(
+                width: SettingsViewMetrics.size.width,
+                height: SettingsViewMetrics.size.height
+            )
         }
     }
-}
-
-/// Notification name posted when presets are modified.
-extension Notification.Name {
-    static let presetsDidChange = Notification.Name("presetsDidChange")
 }

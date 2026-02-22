@@ -102,7 +102,7 @@ struct OnboardingView: View {
 
                 if currentPage == 0 {
                     Button("Continue") {
-                        withAnimation { currentPage = 1 }
+                        currentPage = 1
                     }
                     .buttonStyle(.borderedProminent)
                     .keyboardShortcut(.return, modifiers: [])
@@ -149,10 +149,10 @@ private struct WelcomePage: View {
                     .symbolRenderingMode(.hierarchical)
 
                 Text("Welcome to DisplayApp")
-                    .font(.title.bold())
+                    .font(.system(size: 22, weight: .bold))
 
                 Text("Instantly switch between display resolutions from your menu bar.")
-                    .font(.subheadline)
+                    .font(.system(size: 13.5))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
@@ -209,10 +209,10 @@ private struct PermissionsPage: View {
                     .animation(.easeInOut(duration: 0.3), value: hasPermission)
 
                 Text("Accessibility Permission")
-                    .font(.title.bold())
+                    .font(.system(size: 22, weight: .bold))
 
                 Text("Global keyboard shortcuts need **Accessibility** access so DisplayApp can respond to hotkeys even when another app is in focus.")
-                    .font(.subheadline)
+                    .font(.system(size: 13.5))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
@@ -228,20 +228,17 @@ private struct PermissionsPage: View {
 
             if !hasPermission {
                 // Primary CTA — triggers the system permission prompt on demand.
-                Button {
+                PillButton("Allow Access…", systemImage: "lock.open.fill", style: .accent) {
                     onWillRequestPermission?()
                     permissions.requestAccessibilityPermission()
-                } label: {
-                    Label("Allow Access…", systemImage: "lock.open.fill")
                 }
-                .buttonStyle(.borderedProminent)
                 .padding(.top, 16)
 
                 // Fallback guide shown when the user needs to enable access manually
                 // (e.g. they dismissed the system prompt or it didn't appear).
                 VStack(alignment: .leading, spacing: 10) {
                     Text("Or grant access manually:")
-                        .font(.subheadline.weight(.medium))
+                        .font(.system(size: 13, weight: .medium))
                         .padding(.bottom, 2)
 
                     StepRow(number: 1, text: "Click **Open System Settings** below.")
@@ -253,10 +250,8 @@ private struct PermissionsPage: View {
                 .padding(.top, 16)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                Button {
+                PillButton("Open System Settings", systemImage: "gear", style: .monochrome) {
                     permissions.openAccessibilitySettings()
-                } label: {
-                    Label("Open System Settings", systemImage: "gear")
                 }
                 .padding(.top, 14)
                 .padding(.bottom, 12)
@@ -283,9 +278,9 @@ private struct FeatureRow: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.subheadline.weight(.semibold))
+                    .font(.system(size: 13.5, weight: .semibold))
                 Text(description)
-                    .font(.subheadline)
+                    .font(.system(size: 13))
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -304,13 +299,13 @@ private struct PermissionStatusCard: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(hasPermission ? "Permission granted" : "Permission not granted")
-                    .font(.subheadline.weight(.medium))
+                    .font(.system(size: 13.5, weight: .medium))
                 Text(
                     hasPermission
                         ? "Global keyboard shortcuts are active and ready to use."
                         : "Keyboard shortcuts will not work until this is enabled."
                 )
-                .font(.caption)
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
             }
 
@@ -328,7 +323,6 @@ private struct PermissionStatusCard: View {
                     lineWidth: 1
                 )
         )
-        .animation(.easeInOut(duration: 0.3), value: hasPermission)
     }
 }
 
@@ -339,7 +333,7 @@ private struct StepRow: View {
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
             Text("\(number)")
-                .font(.caption.weight(.bold))
+                .font(.system(size: 10, weight: .bold))
                 .foregroundStyle(.white)
                 .frame(width: 18, height: 18)
                 .background(Color.accentColor)
@@ -347,7 +341,7 @@ private struct StepRow: View {
                 .padding(.top, 1)
 
             Text(text)
-                .font(.subheadline)
+                .font(.system(size: 13))
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -367,14 +361,14 @@ private struct _HeightKey: PreferenceKey {
 
 #Preview("Permissions – not granted") {
     PermissionsPage(
-        permissions: MockPermissionsManager(isAccessibilityTrusted: false),
+        permissions: MockPermissionsManager.previewUntrusted,
         onDismiss: nil,
         onWillRequestPermission: nil
     )
 }
 #Preview("Permissions – granted") {
     PermissionsPage(
-        permissions: MockPermissionsManager(isAccessibilityTrusted: true),
+        permissions: MockPermissionsManager.previewTrusted,
         onDismiss: nil,
         onWillRequestPermission: nil
     )
@@ -384,7 +378,7 @@ private struct _HeightKey: PreferenceKey {
     OnboardingView(
         onDismiss: nil,
         onWillRequestPermission: nil,
-        permissions: MockPermissionsManager(),
+        permissions: MockPermissionsManager.previewUntrusted,
         startOnPage: 0
     )
 }

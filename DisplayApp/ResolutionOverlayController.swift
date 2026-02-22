@@ -14,12 +14,15 @@ import SwiftUI
 /// dismiss timer resets.
 @MainActor
 final class ResolutionOverlayController {
-    static let shared = ResolutionOverlayController()
 
     private var window: NSWindow?
     private var dismissTask: Task<Void, Never>?
+    
+    private let settingsManager: any SettingsManaging
 
-    private init() {}
+    init(settingsManager: any SettingsManaging) {
+        self.settingsManager = settingsManager
+    }
 
     /// Shows the overlay for a single display resolution change.
     ///
@@ -27,6 +30,7 @@ final class ResolutionOverlayController {
     ///   - displayName: The name of the display that changed
     ///   - resolution: The new resolution string (e.g. "1920 × 1080 @ 60Hz (HiDPI)")
     func show(displayName: String, resolution: String) {
+        guard settingsManager.showResolutionOverlay else { return }
         let overlayView = ResolutionOverlayView(
             lines: [OverlayLine(displayName: displayName, resolution: resolution)]
         )
@@ -39,6 +43,7 @@ final class ResolutionOverlayController {
     ///   - presetName: The name of the preset that was applied
     ///   - configurations: Each display's name and new resolution
     func show(presetName: String, configurations: [OverlayLine]) {
+        guard settingsManager.showResolutionOverlay else { return }
         let overlayView = ResolutionOverlayView(
             lines: configurations,
             presetName: presetName
@@ -120,7 +125,10 @@ final class ResolutionOverlayController {
             context.timingFunction = CAMediaTimingFunction(name: .easeIn)
             window?.animator().alphaValue = 0
         }, completionHandler: { [weak self] in
-            self?.window?.orderOut(nil)
+            guard let self else { return }
+            Task { @MainActor in
+                self.window?.orderOut(nil)
+            }
         })
     }
 }

@@ -6,7 +6,8 @@
 //
 
 import AppKit
-import Foundation
+import OSLog
+import SwiftUI
 
 /// Application delegate that initializes core app components.
 ///
@@ -14,16 +15,49 @@ import Foundation
 /// app lifecycle events including launch-time initialization and accessibility permissions.
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    private var menuBarController: MenuBarController!
-    private var keyboardShortcutManager: KeyboardShortcutManager!
-    private let displayManager = DisplayManager.shared
-    private let settingsManager = SettingsManager.shared
-    private let permissionsManager = PermissionsManager()
-    private lazy var onboardingController = OnboardingWindowController(permissions: permissionsManager)
+    
+    var container: Container!
+    
+    private lazy var keyboardShortcutManager = KeyboardShortcutManager(
+        displayManager: container.displayManager,
+        settingsManager: container.settingsManager,
+        permissionsManager: container.permissionsManager,
+        resolutionOverlayController: resolutionOverlayController
+    )
+    private lazy var menuBarController = MenuBarController(
+        displayManager: container.displayManager,
+        resolutionOverlayController: resolutionOverlayController,
+        settingsManager: container.settingsManager
+    )
+    private lazy var onboardingWindowController = OnboardingWindowController(
+        permissions: container.permissionsManager
+    )
+    private lazy var resolutionOverlayController = ResolutionOverlayController(
+        settingsManager: container.settingsManager
+    )
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        guard !ProcessInfo.processInfo.isSwiftUIPreview else { return }
+        
+        // Show item in menu bar
+        menuBarController.setupStatusItem()
+        
+        // Configure settings factory closure
+        menuBarController.makeSettingsViewController = { [weak self] in
+            guard let self else { return nil }
+            return NSHostingController(
+                rootView: SettingsView(
+                    displayManager: self.container.displayManager,
+                    settingsManager: self.container.settingsManager,
+                    onPresetsChanged: { [weak self] in
+                        self?.updateMenuBarAndKeyboardShortcuts()
+                    }
+                )
+            )
+        }
+        
         // Hide dock icon by default (menu bar app)
-        if !settingsManager.showInDock {
+        if !container.settingsManager.showInDock {
             NSApplication.shared.setActivationPolicy(.accessory)
         }
 
@@ -39,29 +73,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // (startOnPage: 0) to show at every launch regardless of permission state.
         #if DEBUG
         let forceOnboarding = UserDefaults.standard.bool(forKey: DebugSettings.forceOnboardingKey)
-        if forceOnboarding || !permissionsManager.isAccessibilityTrusted {
+        if forceOnboarding || !container.permissionsManager.isAccessibilityTrusted {
             // Full welcome flow when force-enabled so the developer can preview both pages;
             // permissions-only page when triggered naturally by missing access.
-            onboardingController.show(startOnPage: forceOnboarding ? 0 : 1)
+            onboardingWindowController.show(startOnPage: forceOnboarding ? 0 : 1)
         }
         #else
-        if !permissionsManager.isAccessibilityTrusted {
-            onboardingController.show(startOnPage: 1)
+        if !container.permissionsManager.isAccessibilityTrusted {
+            onboardingWindowController.show(startOnPage: 1)
         }
         #endif
-
-        // Initialize menu bar controller
-        menuBarController = MenuBarController(
-            displayManager: displayManager,
-            settingsManager: settingsManager
-        )
-
-        // Initialize keyboard shortcut manager
-        keyboardShortcutManager = KeyboardShortcutManager(
-            displayManager: displayManager,
-            settingsManager: settingsManager,
-            permissionsManager: permissionsManager
-        )
 
         // Register existing shortcuts with a slight delay to ensure system is ready
         // This is especially important when the app launches at login
@@ -76,19 +97,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 self?.menuBarController.rebuildMenu()
             }
         }
-
-        // Listen for preset changes from Settings window
-        NotificationCenter.default.addObserver(
-            forName: .presetsDidChange,
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            MainActor.assumeIsolated {
-                guard let self else { return }
-                self.menuBarController.rebuildMenu()
-                self.keyboardShortcutManager.refreshHotKeys()
-            }
-        }
         
         // Re-register shortcuts when app becomes active (e.g., settings window opened)
         // This helps recover from launch-time registration failures
@@ -100,13 +108,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             MainActor.assumeIsolated {
                 guard let self else { return }
                 // Only re-register if we don't have all shortcuts registered
-                let expectedShortcutCount = self.settingsManager.presets.filter { $0.keyboardShortcut != nil }.count
+                let expectedShortcutCount = self.container.settingsManager.presets.filter { $0.keyboardShortcut != nil }.count
                 if self.keyboardShortcutManager.registeredHotKeyCount != expectedShortcutCount {
-                    print("App became active - re-registering shortcuts (expected: \(expectedShortcutCount), current: \(self.keyboardShortcutManager.registeredHotKeyCount))")
+                    Logger.app.info("App became active - re-registering shortcuts (expected: \(expectedShortcutCount), current: \(self.keyboardShortcutManager.registeredHotKeyCount))")
                     self.keyboardShortcutManager.refreshHotKeys()
                 }
             }
         }
+    }
+    
+    /// Rebuilds the menu and keyboard shortcuts.
+    ///
+    /// Must be called any time the resolution presets change.
+    func updateMenuBarAndKeyboardShortcuts() {
+        menuBarController.rebuildMenu()
+        keyboardShortcutManager.refreshHotKeys()
     }
 
     /// Prevents the app from terminating when all windows are closed.

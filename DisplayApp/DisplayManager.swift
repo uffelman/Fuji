@@ -9,180 +9,43 @@ import AppKit
 import CoreGraphics
 import Foundation
 import IOKit
+import OSLog
 
-/// Represents a single display mode (resolution) that a display can support.
-///
-/// Each mode includes dimensions, refresh rate, HiDPI status, and bit depth.
-/// Display modes are uniquely identified and can be compared for equality based on their properties.
-struct DisplayMode: Identifiable, Hashable, Codable {
-    let id: UUID
-    let modeNumber: Int32
-    let width: Int
-    let height: Int
-    let refreshRate: Double
-    let isHiDPI: Bool
-    let bitDepth: Int
-
-    /// The aspect ratio label if it matches a common desktop ratio (e.g. "16:9"), or nil.
+@MainActor
+protocol DisplayManaging: AnyObject {
+    
+    /// The current list of discovered displays.
+    var displays: [Display] { get }
+    
+    /// Queries the system for all active displays and updates the display list.
+    func refreshDisplays()
+    
+    /// Changes a display to the specified mode.
     ///
-    /// Computed once at init time. Only returns a value for these common ratios:
-    /// 16:9, 16:10, 4:3, 21:9, 9:16, 1:1, 5:4, 3:2
-    let aspectRatioLabel: String?
-
-    /// A human-readable string representation of the display mode with full details.
+    /// - Parameters:
+    ///   - mode: The target DisplayMode to apply
+    ///   - displayID: The Core Graphics display ID
+    /// - Returns: `true` if the mode change was successful, `false` otherwise
+    @discardableResult
+    func setDisplayMode(
+        _ mode: DisplayMode,
+        for displayID: CGDirectDisplayID
+    ) -> Bool
+    
+    /// Changes multiple displays to specified modes atomically.
     ///
-    /// Includes resolution, refresh rate, and HiDPI status.
-    /// Example: "1920 × 1080 @ 60Hz (HiDPI)"
-    var displayString: String {
-        let hiDPILabel = isHiDPI ? " (HiDPI)" : ""
-        let refreshString = refreshRate > 0 ? " @ \(Int(refreshRate))Hz" : ""
-        return "\(width) × \(height)\(refreshString)\(hiDPILabel)"
-    }
-
-    /// A short string representation showing only the resolution.
+    /// - Parameter configurations: An array of tuples containing display IDs and their target modes
+    /// - Returns: `true` if all mode changes were successful, `false` if any failed
+    @discardableResult
+    func setMultipleDisplayModes(
+        _ configurations: [(displayID: CGDirectDisplayID, mode: DisplayMode)]
+    ) -> Bool
+    
+    /// Resets all connected displays to their default resolutions atomically.
     ///
-    /// Example: "1920×1080"
-    var shortDisplayString: String {
-        return "\(width)×\(height)"
-    }
-
-    /// Common desktop aspect ratios used to determine `aspectRatioLabel`.
-    private static let commonRatios: [(w: Int, h: Int, label: String)] = [
-        (16, 9, "16:9"),
-        (16, 10, "16:10"),
-        (4, 3, "4:3"),
-        (21, 9, "21:9"),
-        (9, 16, "9:16"),
-        (1, 1, "1:1"),
-        (5, 4, "5:4"),
-        (3, 2, "3:2"),
-    ]
-
-    /// Computes the aspect ratio label for the given dimensions.
-    ///
-    /// First tries exact GCD match, then falls back to approximate floating-point
-    /// comparison to handle resolutions like 1366×768 (≈16:9).
-    private static func computeAspectRatioLabel(width: Int, height: Int) -> String? {
-        guard width > 0 && height > 0 else { return nil }
-        let g = gcd(width, height)
-        let rw = width / g
-        let rh = height / g
-        // Exact match
-        if let label = commonRatios.first(where: { $0.w == rw && $0.h == rh })?.label {
-            return label
-        }
-        // Approximate match (tolerance of 1%)
-        let ratio = Double(width) / Double(height)
-        for entry in commonRatios {
-            let target = Double(entry.w) / Double(entry.h)
-            if abs(ratio - target) / target < 0.01 {
-                return entry.label
-            }
-        }
-        return nil
-    }
-
-    /// Computes the greatest common divisor of two integers.
-    private static func gcd(_ a: Int, _ b: Int) -> Int {
-        var a = a, b = b
-        while b != 0 { (a, b) = (b, a % b) }
-        return a
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case id, modeNumber, width, height, refreshRate, isHiDPI, bitDepth
-    }
-
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.id = try container.decode(UUID.self, forKey: .id)
-        self.modeNumber = try container.decode(Int32.self, forKey: .modeNumber)
-        self.width = try container.decode(Int.self, forKey: .width)
-        self.height = try container.decode(Int.self, forKey: .height)
-        self.refreshRate = try container.decode(Double.self, forKey: .refreshRate)
-        self.isHiDPI = try container.decode(Bool.self, forKey: .isHiDPI)
-        self.bitDepth = try container.decode(Int.self, forKey: .bitDepth)
-        self.aspectRatioLabel = Self.computeAspectRatioLabel(width: width, height: height)
-    }
-
-    init(
-        modeNumber: Int32, width: Int, height: Int, refreshRate: Double, isHiDPI: Bool,
-        bitDepth: Int
-    ) {
-        self.id = UUID()
-        self.modeNumber = modeNumber
-        self.width = width
-        self.height = height
-        self.refreshRate = refreshRate
-        self.isHiDPI = isHiDPI
-        self.bitDepth = bitDepth
-        self.aspectRatioLabel = Self.computeAspectRatioLabel(width: width, height: height)
-    }
-
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(width)
-        hasher.combine(height)
-        hasher.combine(refreshRate)
-        hasher.combine(isHiDPI)
-    }
-
-    /// Implements custom equality comparison for display modes.
-    ///
-    /// Two modes are considered equal if they have matching width, height, refresh rate (within 0.01Hz tolerance),
-    /// and HiDPI status. This accounts for floating-point precision issues with refresh rates.
-    static func == (lhs: DisplayMode, rhs: DisplayMode) -> Bool {
-        // Use epsilon comparison for refresh rate due to floating point precision issues
-        let refreshRateMatch = abs(lhs.refreshRate - rhs.refreshRate) < 0.01
-        return lhs.width == rhs.width && lhs.height == rhs.height
-            && refreshRateMatch && lhs.isHiDPI == rhs.isHiDPI
-    }
-}
-
-/// Represents a physical display connected to the system.
-///
-/// Contains information about the display's identity, capabilities, available modes,
-/// and current configuration. The display ID is unique and assigned by the system.
-struct Display: Identifiable, Hashable {
-    let id: CGDirectDisplayID
-    let name: String
-    let isBuiltIn: Bool
-    let isMain: Bool
-    var modes: [DisplayMode]
-    var currentMode: DisplayMode?
-    var defaultMode: DisplayMode?
-
-    /// A human-readable label for the display including its status indicators.
-    ///
-    /// Appends "(Main)" if this is the main display and "- Built-in" if it's the built-in display.
-    var displayLabel: String {
-        var label = name
-        if isMain {
-            label += " (Main)"
-        }
-        if isBuiltIn {
-            label += " - Built-in"
-        }
-        return label
-    }
-
-    /// Checks if the given mode is the default mode for this display.
-    ///
-    /// The default mode is typically the display's native resolution with optimal scaling.
-    /// - Parameter mode: The display mode to check
-    /// - Returns: `true` if the mode matches the display's default mode
-    func isDefaultMode(_ mode: DisplayMode) -> Bool {
-        guard let defaultMode = defaultMode else { return false }
-        return mode.width == defaultMode.width && mode.height == defaultMode.height
-            && mode.refreshRate == defaultMode.refreshRate && mode.isHiDPI == defaultMode.isHiDPI
-    }
-
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
-    }
-
-    static func == (lhs: Display, rhs: Display) -> Bool {
-        return lhs.id == rhs.id
-    }
+    /// - Returns: `true` if all resets were successful, `false` otherwise
+    @discardableResult
+    func resetAllToDefault() -> Bool
 }
 
 /// Manages all connected displays and their resolution modes.
@@ -192,11 +55,9 @@ struct Display: Identifiable, Hashable {
 /// an up-to-date list of available displays. All display operations use Core Graphics APIs.
 @MainActor
 @Observable
-final class DisplayManager {
-    static let shared = DisplayManager()
-
+final class DisplayManager: DisplayManaging {
+    
     private(set) var displays: [Display] = []
-    private var displayReconfigurationCallback: CGDisplayReconfigurationCallBack?
 
     init() {
         refreshDisplays()
@@ -217,7 +78,7 @@ final class DisplayManager {
 
         let result = CGGetActiveDisplayList(16, &displayIDs, &displayCount)
         guard result == .success else {
-            print("Failed to get display list: \(result)")
+            Logger.app.error("Failed to get display list: \(result.rawValue)")
             return
         }
 
@@ -458,7 +319,7 @@ final class DisplayManager {
             guard cgMode.isUsableForDesktopGUI() else { continue }
 
             let mode = DisplayMode(
-                modeNumber: Int32(index),
+                modeNumber: index,
                 width: width,
                 height: height,
                 refreshRate: refreshRate,
@@ -533,27 +394,27 @@ final class DisplayManager {
         }
 
         guard let cgMode = targetMode else {
-            print("Could not find matching display mode")
+            Logger.app.error("Could not find matching display mode")
             return false
         }
 
         var config: CGDisplayConfigRef?
         var result = CGBeginDisplayConfiguration(&config)
         guard result == .success, let config = config else {
-            print("Failed to begin display configuration: \(result)")
+            Logger.app.error("Failed to begin display configuration: \(result.rawValue)")
             return false
         }
 
         result = CGConfigureDisplayWithDisplayMode(config, displayID, cgMode, nil)
         guard result == .success else {
             CGCancelDisplayConfiguration(config)
-            print("Failed to configure display mode: \(result)")
+            Logger.app.error("Failed to configure display mode: \(result.rawValue)")
             return false
         }
 
         result = CGCompleteDisplayConfiguration(config, .permanently)
         guard result == .success else {
-            print("Failed to complete display configuration: \(result)")
+            Logger.app.error("Failed to complete display configuration: \(result.rawValue)")
             return false
         }
 
@@ -583,7 +444,7 @@ final class DisplayManager {
         var config: CGDisplayConfigRef?
         var result = CGBeginDisplayConfiguration(&config)
         guard result == .success, let config = config else {
-            print("Failed to begin display configuration: \(result)")
+            Logger.app.error("Failed to begin display configuration: \(result.rawValue)")
             return false
         }
 
@@ -604,21 +465,21 @@ final class DisplayManager {
 
             guard let cgMode = targetMode else {
                 CGCancelDisplayConfiguration(config)
-                print("Could not find matching display mode for display \(displayID)")
+                Logger.app.error("Could not find matching display mode for display \(displayID)")
                 return false
             }
 
             result = CGConfigureDisplayWithDisplayMode(config, displayID, cgMode, nil)
             guard result == .success else {
                 CGCancelDisplayConfiguration(config)
-                print("Failed to configure display mode: \(result)")
+                Logger.app.error("Failed to configure display mode: \(result.rawValue)")
                 return false
             }
         }
 
         result = CGCompleteDisplayConfiguration(config, .permanently)
         guard result == .success else {
-            print("Failed to complete display configuration: \(result)")
+            Logger.app.error("Failed to complete display configuration: \(result.rawValue)")
             return false
         }
 
@@ -652,19 +513,62 @@ final class DisplayManager {
     /// mode changes, display additions, and removals. When triggered, it automatically
     /// refreshes the display list on the main actor.
     private func registerForDisplayChanges() {
-        CGDisplayRegisterReconfigurationCallback(
-            { displayID, flags, userInfo in
-                if flags.contains(.setModeFlag) || flags.contains(.addFlag)
-                    || flags.contains(.removeFlag)
-                {
-                    Task { @MainActor in
-                        DisplayManager.shared.refreshDisplays()
-                    }
-                }
-            }, nil)
+        let pointer = UnsafeMutableRawPointer(Unmanaged.passUnretained(self).toOpaque())
+        CGDisplayRegisterReconfigurationCallback(displayReconfigurationCallback, pointer)
     }
 
     nonisolated private func unregisterDisplayChanges() {
-        CGDisplayRemoveReconfigurationCallback({ _, _, _ in }, nil)
+        let pointer = UnsafeMutableRawPointer(Unmanaged.passUnretained(self).toOpaque())
+        CGDisplayRemoveReconfigurationCallback(displayReconfigurationCallback, pointer)
+    }
+}
+
+nonisolated private func displayReconfigurationCallback(
+    _ displayID: CGDirectDisplayID,
+    _ flags: CGDisplayChangeSummaryFlags,
+    _ userInfo: UnsafeMutableRawPointer?
+) {
+    guard
+        let userInfo,
+        flags.contains(.setModeFlag) || flags.contains(.addFlag) || flags.contains(.removeFlag)
+    else { return }
+
+    let instance = Unmanaged<DisplayManager>.fromOpaque(userInfo).takeUnretainedValue()
+
+    Task { @MainActor in
+        instance.refreshDisplays()
+    }
+}
+
+@MainActor
+final class MockDisplayManager: DisplayManaging {
+    static let preview = MockDisplayManager()
+    
+    var displays: [Display] = []
+    
+    init(displays: [Display] = []) {
+        self.displays = displays
+    }
+    
+    func refreshDisplays() {}
+    
+    @discardableResult
+    func setDisplayMode(
+        _ mode: DisplayMode,
+        for displayID: CGDirectDisplayID
+    ) -> Bool {
+        return true
+    }
+    
+    @discardableResult
+    func setMultipleDisplayModes(
+        _ configurations: [(displayID: CGDirectDisplayID, mode: DisplayMode)]
+    ) -> Bool {
+        true
+    }
+    
+    @discardableResult
+    func resetAllToDefault() -> Bool {
+        return true
     }
 }

@@ -15,21 +15,30 @@ import SwiftUI
 /// and coordinates with DisplayManager for resolution changes.
 @MainActor
 final class MenuBarController: NSObject {
+    
+    private let displayManager: any DisplayManaging
+    private let resolutionOverlayController: ResolutionOverlayController
+    private let settingsManager: any SettingsManaging
+    
     private var statusItem: NSStatusItem!
     private var menu: NSMenu!
-    private let displayManager: DisplayManager
-    private let settingsManager: SettingsManager
     private var settingsWindow: NSWindow?
+    
+    var makeSettingsViewController: (() -> NSViewController?)?
 
-    init(displayManager: DisplayManager, settingsManager: SettingsManager) {
+    init(
+        displayManager: any DisplayManaging,
+        resolutionOverlayController: ResolutionOverlayController,
+        settingsManager: any SettingsManaging
+    ) {
         self.displayManager = displayManager
         self.settingsManager = settingsManager
+        self.resolutionOverlayController = resolutionOverlayController
         super.init()
-        setupStatusItem()
     }
 
     /// Creates the status bar item and initializes the menu.
-    private func setupStatusItem() {
+    func setupStatusItem() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
 
         if let button = statusItem.button {
@@ -288,7 +297,7 @@ final class MenuBarController: NSObject {
             if success {
                 rebuildMenu()
                 if let display = displayManager.displays.first(where: { $0.id == displayID }) {
-                    ResolutionOverlayController.shared.show(
+                    resolutionOverlayController.show(
                         displayName: display.name,
                         resolution: mode.displayString
                     )
@@ -334,7 +343,7 @@ final class MenuBarController: NSObject {
                     }
                     return OverlayLine(displayName: display.name, resolution: config.mode.displayString)
                 }
-                ResolutionOverlayController.shared.show(
+                resolutionOverlayController.show(
                     presetName: preset.name,
                     configurations: overlayLines
                 )
@@ -363,7 +372,7 @@ final class MenuBarController: NSObject {
                 guard let defaultMode = display.defaultMode else { return nil }
                 return OverlayLine(displayName: display.name, resolution: defaultMode.displayString)
             }
-            ResolutionOverlayController.shared.show(
+            resolutionOverlayController.show(
                 presetName: "Reset to Default",
                 configurations: overlayLines
             )
@@ -378,8 +387,30 @@ final class MenuBarController: NSObject {
     /// Opens the settings window.
     @objc private func openSettings() {
         // Use the legacy window approach since SwiftUI Settings scene
-        // cannot be opened reliably from outside SwiftUI
+        // cannot be opened reliably from outside SwiftUI.
         openSettingsWindowLegacy()
+    }
+    
+    private func makeSettingsWindow() -> NSWindow {
+        guard let factory = makeSettingsViewController, let hostingController = factory() else {
+            fatalError("AppDelegate did not properly configure MenuBarController")
+        }
+
+        let contentSize = NSSize(
+            width: SettingsViewMetrics.size.width,
+            height: SettingsViewMetrics.size.height
+        )
+
+        let settingsWindow = NSWindow(contentViewController: hostingController)
+        settingsWindow.title = "DisplayApp Settings"
+        settingsWindow.styleMask = [.titled, .closable, .miniaturizable]
+        settingsWindow.setContentSize(contentSize)
+        settingsWindow.minSize = contentSize
+        settingsWindow.maxSize = contentSize
+        settingsWindow.center()
+        settingsWindow.isReleasedWhenClosed = false
+        
+        return settingsWindow
     }
 
     /// Creates and displays a standalone settings window using NSHostingController.
@@ -388,25 +419,8 @@ final class MenuBarController: NSObject {
     /// is not reliably accessible from outside SwiftUI contexts.
     private func openSettingsWindowLegacy() {
         if settingsWindow == nil {
-            let settingsView = SettingsView(
-                displayManager: displayManager,
-                settingsManager: settingsManager,
-                onPresetsChanged: { [weak self] in
-                    self?.rebuildMenu()
-                }
-            )
-
-            let hostingController = NSHostingController(rootView: settingsView)
-
-            settingsWindow = NSWindow(contentViewController: hostingController)
-            settingsWindow?.title = "DisplayApp Settings"
-            settingsWindow?.styleMask = [.titled, .closable, .miniaturizable, .resizable]
-            settingsWindow?.setContentSize(NSSize(width: 600, height: 500))
-            settingsWindow?.minSize = NSSize(width: 500, height: 400)
-            settingsWindow?.center()
-            settingsWindow?.isReleasedWhenClosed = false
+            settingsWindow = makeSettingsWindow()
         }
-
         NSApp.activate(ignoringOtherApps: true)
         settingsWindow?.makeKeyAndOrderFront(nil)
     }
