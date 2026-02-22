@@ -31,11 +31,10 @@ final class MenuBarController: NSObject {
         self.settingsManager = settingsManager
         self.resolutionOverlayController = resolutionOverlayController
         super.init()
-        setupStatusItem()
     }
 
     /// Creates the status bar item and initializes the menu.
-    private func setupStatusItem() {
+    func setupStatusItem() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
 
         if let button = statusItem.button {

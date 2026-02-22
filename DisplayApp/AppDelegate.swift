@@ -20,6 +20,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         guard !ProcessInfo.processInfo.isSwiftUIPreview else { return }
         
+        // Show item in menu bar
+        container.menuBarController.setupStatusItem()
+        
         // Hide dock icon by default (menu bar app)
         if !container.settingsManager.showInDock {
             NSApplication.shared.setActivationPolicy(.accessory)
