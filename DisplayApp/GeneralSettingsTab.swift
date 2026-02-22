@@ -36,8 +36,8 @@ struct GeneralSettingsTab: View {
                 SettingsFormRow(
                     label: "Show overlay when switching resolutions",
                     isOn: $showResolutionOverlay,
-                    onChange: {
-                        settingsManager.showResolutionOverlay = $0
+                    onChange: { newValue in
+                        settingsManager.showResolutionOverlay = newValue
                     }
                 )
 
@@ -46,9 +46,9 @@ struct GeneralSettingsTab: View {
                 SettingsFormRow(
                     label: "Launch at Login",
                     isOn: $launchAtLogin,
-                    onChange: {
-                        settingsManager.launchAtLogin = $0
-                        updateLaunchAtLogin(enabled: $0)
+                    onChange: { newValue in
+                        settingsManager.launchAtLogin = newValue
+                        updateLaunchAtLogin(enabled: newValue)
                     }
                 )
                 
@@ -57,8 +57,8 @@ struct GeneralSettingsTab: View {
                 SettingsFormRow(
                     label: "Show in Dock",
                     isOn: $showInDock,
-                    onChange: {
-                        settingsManager.showInDock = $0
+                    onChange: { newValue in
+                        settingsManager.showInDock = newValue
                     }
                 )
             }
