@@ -138,12 +138,12 @@ struct PresetEditorSheet: View {
             HStack {
                 Spacer()
 
-                Button("Cancel") {
+                PillButton("Cancel", style: .monochrome) {
                     dismiss()
                 }
                 .keyboardShortcut(.cancelAction)
 
-                Button("Save") {
+                PillButton("Save", style: .accent) {
                     savePreset()
                 }
                 .keyboardShortcut(.defaultAction)
