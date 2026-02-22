@@ -9,32 +9,21 @@ import Foundation
 
 @MainActor
 final class Container {
-    
     let displayManager: any DisplayManaging = DisplayManager()
-    let keyboardShortcutManager: KeyboardShortcutManager
-    let menuBarController: MenuBarController
-    let onboardingWindowController: OnboardingWindowController
-    let permissionsManager: any PermissionsManaging = PermissionsManager()
-    let resolutionOverlayController: ResolutionOverlayController
     let settingsManager: any SettingsManaging = SettingsManager()
+    let permissionsManager: any PermissionsManaging = PermissionsManager()
     
-    init() {
-        resolutionOverlayController = ResolutionOverlayController(
-            settingsManager
-        )
-        keyboardShortcutManager = KeyboardShortcutManager(
-            displayManager,
-            settingsManager,
-            permissionsManager,
-            resolutionOverlayController
-        )
-        menuBarController = MenuBarController(
-            displayManager,
-            settingsManager,
-            resolutionOverlayController
-        )
-        onboardingWindowController = OnboardingWindowController(
-            permissionsManager
-        )
-    }
+    lazy var keyboardShortcutManager = KeyboardShortcutManager(
+        displayManager,
+        settingsManager,
+        permissionsManager,
+        resolutionOverlayController
+    )
+    lazy var menuBarController = MenuBarController(
+        displayManager,
+        settingsManager,
+        resolutionOverlayController
+    )
+    lazy var onboardingWindowController = OnboardingWindowController(permissionsManager)
+    lazy var resolutionOverlayController = ResolutionOverlayController(settingsManager)
 }
