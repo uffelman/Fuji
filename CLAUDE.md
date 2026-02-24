@@ -1,4 +1,4 @@
-# DisplayApp — Project Context
+# Fuji — Project Context
 
 > **Keep this file updated.** When you add a new manager, feature, or significant architectural change, update the relevant section below so the next session starts with accurate context.
 
@@ -7,7 +7,7 @@ See `agents.md` for coding rules (Swift/SwiftUI conventions, API preferences, pr
 
 ## What the app is
 
-DisplayApp is a **macOS menu bar utility** that lets users browse and switch display resolutions, save named presets, and trigger presets via global keyboard shortcuts. It has no main window — it lives entirely in the menu bar (`LSUIElement = true`).
+Fuji is a **macOS menu bar utility** that lets users browse and switch display resolutions, save named presets, and trigger presets via global keyboard shortcuts. It has no main window — it lives entirely in the menu bar (`LSUIElement = true`).
 
 - **Platform:** macOS 26.2+
 - **Language:** Swift 6.2, strict concurrency
@@ -20,8 +20,8 @@ DisplayApp is a **macOS menu bar utility** that lets users browse and switch dis
 ## File map
 
 ```
-DisplayApp/
-├── DisplayAppApp.swift              @main entry; Settings scene
+Fuji/
+├── FujiApp.swift              @main entry; Settings scene
 ├── AppDelegate.swift                Startup orchestration, wires all managers
 ├── DisplayManager.swift             Core Graphics display enumeration + mode switching
 ├── DisplayConfiguration.swift       Value type pairing a display ID with a mode
@@ -82,6 +82,6 @@ DisplayApp/
 
 ## Current state
 
-- Working title "DisplayApp" — final name TBD.
+- Working title "Fuji" — final name TBD.
 - App icon is a placeholder.
 - No test target exists yet; `PermissionsManaging` protocol + `MockPermissionsManager` are ready for unit testing.
