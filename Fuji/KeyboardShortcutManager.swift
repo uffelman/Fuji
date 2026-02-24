@@ -8,7 +8,6 @@
 import AppKit
 import Carbon
 import Foundation
-import UserNotifications
 import OSLog
 
 /// Manages global keyboard shortcuts for triggering resolution presets.
@@ -44,15 +43,6 @@ final class KeyboardShortcutManager {
         self.permissionsManager = permissionsManager
         self.resolutionOverlayController = resolutionOverlayController
         setupEventHandler()
-        requestNotificationPermission()
-    }
-
-    /// Requests permission to display user notifications.
-    ///
-    /// Used to show feedback when presets are applied via keyboard shortcuts.
-    private func requestNotificationPermission() {
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in
-        }
     }
 
     /// Sets up the Carbon event handler for receiving hotkey events.
@@ -142,10 +132,6 @@ final class KeyboardShortcutManager {
         
         // Use smart display matching from extension
         guard let configurations = preset.matchConfigurations(to: displayManager) else {
-            showNotification(
-                title: "Display Not Found",
-                message: "Could not apply preset '\(preset.name)' - display configuration changed"
-            )
             return
         }
 
@@ -161,34 +147,9 @@ final class KeyboardShortcutManager {
                 presetName: preset.name,
                 configurations: overlayLines
             )
-        } else {
-            showNotification(
-                title: "Failed to Apply Preset",
-                message: "Could not apply '\(preset.name)' - check Console for details"
-            )
         }
 
         onShortcutTriggered?(preset)
-    }
-
-    /// Displays a user notification with the given title and message.
-    ///
-    /// - Parameters:
-    ///   - title: The notification title
-    ///   - message: The notification body text
-    private func showNotification(title: String, message: String) {
-        let content = UNMutableNotificationContent()
-        content.title = title
-        content.body = message
-        content.sound = .default
-
-        let request = UNNotificationRequest(
-            identifier: UUID().uuidString,
-            content: content,
-            trigger: nil
-        )
-
-        UNUserNotificationCenter.current().add(request)
     }
 
     /// Registers a global hotkey with the system.
