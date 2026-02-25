@@ -11,10 +11,11 @@ import SwiftUI
 /// The main settings view for the application.
 ///
 /// Displays a tab-based interface with sections for managing presets, general settings, and app information.
-struct SettingsView<DM: DisplayManaging, SM: SettingsManaging>: View {
+struct SettingsView<DM: DisplayManaging>: View {
+    
+    @Environment(SettingsManager.self) private var settingsManager
     
     let displayManager: DM
-    let settingsManager: SM
     let onPresetsChanged: (() -> Void)?
 
     @State private var selectedTab = SettingsTab.presets
@@ -54,7 +55,6 @@ struct SettingsView<DM: DisplayManaging, SM: SettingsManaging>: View {
                     )
                 case .general:
                     GeneralSettingsTab(
-                        settingsManager: settingsManager,
                         onIncrementSettingsChanged: onPresetsChanged
                     )
                 case .about:
@@ -186,7 +186,7 @@ struct PresetRow: View {
 #Preview {
     SettingsView(
         displayManager: MockDisplayManager.preview,
-        settingsManager: MockSettingsManager.preview,
         onPresetsChanged: nil
     )
+    .environment(SettingsManager(defaults: .preview))
 }

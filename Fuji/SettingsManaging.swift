@@ -7,31 +7,8 @@
 
 import AppKit
 import OSLog
+import ServiceManagement
 import SwiftUI
-
-@MainActor
-protocol SettingsManaging: AnyObject {
-    
-    var launchAtLogin: Bool { get set }
-    var presets: [ResolutionPreset] { get }
-    var showInDock: Bool { get set }
-    var showResolutionOverlay: Bool { get set }
-    var enableIncrementShortcuts: Bool { get set }
-    var incrementUpShortcut: KeyboardShortcut? { get set }
-    var incrementDownShortcut: KeyboardShortcut? { get set }
-
-    /// The effective increment-up shortcut, falling back to the default.
-    var effectiveIncrementUpShortcut: KeyboardShortcut { get }
-    /// The effective increment-down shortcut, falling back to the default.
-    var effectiveIncrementDownShortcut: KeyboardShortcut { get }
-
-    func addPreset(_ preset: ResolutionPreset)
-    func updatePreset(_ preset: ResolutionPreset)
-    func deletePreset(_ preset: ResolutionPreset)
-    func deletePreset(at offsets: IndexSet)
-    func movePreset(from source: IndexSet, to destination: Int)
-    func preset(for shortcut: KeyboardShortcut) -> ResolutionPreset?
-}
 
 /// Manages app settings and resolution presets.
 ///
@@ -39,46 +16,38 @@ protocol SettingsManaging: AnyObject {
 /// launch at login settings, and dock visibility. Settings are stored using UserDefaults.
 @MainActor
 @Observable
-final class SettingsManager: SettingsManaging {
+final class SettingsManager {
     
-    private let presetsKey = "displayPresets"
-    private let launchAtLoginKey = "launchAtLogin"
-    private let showInDockKey = "showInDock"
-    private let showResolutionOverlayKey = "showResolutionOverlay"
-    private let enableIncrementShortcutsKey = "enableIncrementShortcuts"
-    private let incrementUpShortcutKey = "incrementUpShortcut"
-    private let incrementDownShortcutKey = "incrementDownShortcut"
-
+    private let defaults: UserDefaults
     private(set) var presets: [ResolutionPreset] = []
 
-    var launchAtLogin: Bool {
-        get { UserDefaults.standard.bool(forKey: launchAtLoginKey) }
-        set { UserDefaults.standard.set(newValue, forKey: launchAtLoginKey) }
+    var enableIncrementShortcuts: Bool {
+        didSet {
+            defaults.set(enableIncrementShortcuts, forKey: Keys.enableIncrementShortcuts)
+        }
     }
-
+    
+    var launchAtLogin: Bool {
+        didSet {
+            defaults.set(launchAtLogin, forKey: Keys.launchAtLogin)
+        }
+    }
+    
     var showInDock: Bool {
-        get { UserDefaults.standard.bool(forKey: showInDockKey) }
-        set {
-            UserDefaults.standard.set(newValue, forKey: showInDockKey)
-            updateDockVisibility()
+        didSet {
+            defaults.set(showInDock, forKey: Keys.showInDock)
         }
     }
     
     var showResolutionOverlay: Bool {
-        get { UserDefaults.standard.bool(forKey: showResolutionOverlayKey) }
-        set {
-            UserDefaults.standard.set(newValue, forKey: showResolutionOverlayKey)
+        didSet {
+            defaults.set(showResolutionOverlay, forKey: Keys.showResolutionOverlay)
         }
-    }
-
-    var enableIncrementShortcuts: Bool {
-        get { UserDefaults.standard.bool(forKey: enableIncrementShortcutsKey) }
-        set { UserDefaults.standard.set(newValue, forKey: enableIncrementShortcutsKey) }
     }
 
     var incrementUpShortcut: KeyboardShortcut? {
         get {
-            guard let data = UserDefaults.standard.data(forKey: incrementUpShortcutKey) else {
+            guard let data = defaults.data(forKey: Keys.incrementUpShortcut) else {
                 return nil
             }
             return try? JSONDecoder().decode(KeyboardShortcut.self, from: data)
@@ -86,16 +55,16 @@ final class SettingsManager: SettingsManaging {
         set {
             if let newValue {
                 let data = try? JSONEncoder().encode(newValue)
-                UserDefaults.standard.set(data, forKey: incrementUpShortcutKey)
+                defaults.set(data, forKey: Keys.incrementUpShortcut)
             } else {
-                UserDefaults.standard.removeObject(forKey: incrementUpShortcutKey)
+                defaults.removeObject(forKey: Keys.incrementUpShortcut)
             }
         }
     }
 
     var incrementDownShortcut: KeyboardShortcut? {
         get {
-            guard let data = UserDefaults.standard.data(forKey: incrementDownShortcutKey) else {
+            guard let data = defaults.data(forKey: Keys.incrementDownShortcut) else {
                 return nil
             }
             return try? JSONDecoder().decode(KeyboardShortcut.self, from: data)
@@ -103,9 +72,9 @@ final class SettingsManager: SettingsManaging {
         set {
             if let newValue {
                 let data = try? JSONEncoder().encode(newValue)
-                UserDefaults.standard.set(data, forKey: incrementDownShortcutKey)
+                defaults.set(data, forKey: Keys.incrementDownShortcut)
             } else {
-                UserDefaults.standard.removeObject(forKey: incrementDownShortcutKey)
+                defaults.removeObject(forKey: Keys.incrementDownShortcut)
             }
         }
     }
@@ -118,8 +87,15 @@ final class SettingsManager: SettingsManaging {
         incrementDownShortcut ?? .defaultIncrementDown
     }
 
-    init() {
-        registerDefaults()
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+        defaults.register()
+        
+        enableIncrementShortcuts = defaults.bool(forKey: Keys.enableIncrementShortcuts)
+        launchAtLogin = defaults.bool(forKey: Keys.launchAtLogin)
+        showInDock = defaults.bool(forKey: Keys.showInDock)
+        showResolutionOverlay = defaults.bool(forKey: Keys.showResolutionOverlay)
+        
         loadPresets()
     }
 
@@ -128,7 +104,7 @@ final class SettingsManager: SettingsManaging {
     /// Attempts to decode the stored preset data. If decoding fails or no data exists,
     /// initializes with an empty preset list.
     private func loadPresets() {
-        guard let data = UserDefaults.standard.data(forKey: presetsKey) else {
+        guard let data = defaults.data(forKey: Keys.displayPresets) else {
             presets = []
             return
         }
@@ -140,15 +116,6 @@ final class SettingsManager: SettingsManaging {
             presets = []
         }
     }
-    
-    private func registerDefaults() {
-        UserDefaults.standard.register(defaults: [
-            launchAtLoginKey: false,
-            showInDockKey: false,
-            showResolutionOverlayKey: true,
-            enableIncrementShortcutsKey: true
-        ])
-    }
 
     /// Saves the current presets to UserDefaults.
     ///
@@ -156,7 +123,7 @@ final class SettingsManager: SettingsManaging {
     private func savePresets() {
         do {
             let data = try JSONEncoder().encode(presets)
-            UserDefaults.standard.set(data, forKey: presetsKey)
+            defaults.set(data, forKey: Keys.displayPresets)
         } catch {
             Logger.app.error("Failed to encode presets: \(error)")
         }
@@ -218,32 +185,48 @@ final class SettingsManager: SettingsManaging {
             NSApplication.shared.setActivationPolicy(.accessory)
         }
     }
+    
+    /// Registers or unregisters the app to launch at login using SMAppService.
+    ///
+    /// - Parameter enabled: Whether to enable or disable launch at login
+    private func updateLaunchAtLogin(enabled: Bool) {
+        do {
+            if enabled {
+                try SMAppService.mainApp.register()
+            } else {
+                try SMAppService.mainApp.unregister()
+            }
+        } catch {
+            Logger.app.error("Failed to update launch at login: \(error)")
+        }
+    }
 }
 
-@MainActor
-@Observable
-final class MockSettingsManager: SettingsManaging {
-    static let preview = MockSettingsManager()
-    
-    var presets: [ResolutionPreset] = []
-    var launchAtLogin = false
-    var showInDock = false
-    var showResolutionOverlay = true
-    var enableIncrementShortcuts = true
-    var incrementUpShortcut: KeyboardShortcut?
-    var incrementDownShortcut: KeyboardShortcut?
-    var effectiveIncrementUpShortcut: KeyboardShortcut { incrementUpShortcut ?? .defaultIncrementUp }
-    var effectiveIncrementDownShortcut: KeyboardShortcut { incrementDownShortcut ?? .defaultIncrementDown }
+private enum Keys {
+    static let displayPresets = "displayPresets"
+    static let enableIncrementShortcuts = "enableIncrementShortcuts"
+    static let incrementDownShortcut = "incrementDownShortcut"
+    static let incrementUpShortcut = "incrementUpShortcut"
+    static let launchAtLogin = "launchAtLogin"
+    static let showInDock = "showInDock"
+    static let showResolutionOverlay = "showResolutionOverlay"
+}
 
-    func addPreset(_ preset: ResolutionPreset) {}
+extension UserDefaults {
+    /// Defaults without a persistence layer, designed for use in previews.
+    static var preview: UserDefaults {
+        let previewDefaults = UserDefaults(suiteName: "PreviewDefaults")!
+            previewDefaults.removePersistentDomain(forName: "PreviewDefaults")
+        return previewDefaults
+    }
     
-    func updatePreset(_ preset: ResolutionPreset) {}
-    
-    func deletePreset(_ preset: ResolutionPreset) {}
-    
-    func deletePreset(at offsets: IndexSet) {}
-    
-    func movePreset(from source: IndexSet, to destination: Int) {}
-    
-    func preset(for shortcut: KeyboardShortcut) -> ResolutionPreset? { nil }
+    /// Sets any unset values for the keys to the defaults specified.
+    func register() {
+        register(defaults: [
+            Keys.launchAtLogin: false,
+            Keys.showInDock: false,
+            Keys.showResolutionOverlay: true,
+            Keys.enableIncrementShortcuts: true
+        ])
+    }
 }

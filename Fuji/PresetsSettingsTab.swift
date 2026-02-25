@@ -12,9 +12,9 @@ import SwiftUI
 ///
 /// Allows users to create, edit, delete, and reorder resolution presets.
 /// Shows warnings when accessibility permissions are not granted.
-struct PresetsSettingsTab<DM: DisplayManaging, SM: SettingsManaging>: View {
+struct PresetsSettingsTab<DM: DisplayManaging>: View {
     let displayManager: DM
-    let settingsManager: SM
+    let settingsManager: SettingsManager
     let onPresetsChanged: (() -> Void)?
 
     @State private var showingAddPreset = false
@@ -87,7 +87,6 @@ struct PresetsSettingsTab<DM: DisplayManaging, SM: SettingsManaging>: View {
         .sheet(isPresented: $showingAddPreset) {
             PresetEditorSheet(
                 displayManager: displayManager,
-                settingsManager: settingsManager,
                 preset: nil,
                 onSave: { preset in
                     settingsManager.addPreset(preset)
@@ -98,7 +97,6 @@ struct PresetsSettingsTab<DM: DisplayManaging, SM: SettingsManaging>: View {
         .sheet(item: $editingPreset) { preset in
             PresetEditorSheet(
                 displayManager: displayManager,
-                settingsManager: settingsManager,
                 preset: preset,
                 onSave: { updatedPreset in
                     settingsManager.updatePreset(updatedPreset)
@@ -175,7 +173,7 @@ private struct AccessibilityPermissionWarning: View {
 #Preview {
     PresetsSettingsTab(
         displayManager: MockDisplayManager.preview,
-        settingsManager: MockSettingsManager.preview,
+        settingsManager: SettingsManager(defaults: .preview),
         onPresetsChanged: nil
     )
 }

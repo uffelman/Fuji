@@ -48,11 +48,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return NSHostingController(
                 rootView: SettingsView(
                     displayManager: self.container.displayManager,
-                    settingsManager: self.container.settingsManager,
                     onPresetsChanged: { [weak self] in
                         self?.updateMenuBarAndKeyboardShortcuts()
                     }
-                )
+                ).environment(self.container.settingsManager)
             )
         }
         

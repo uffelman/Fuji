@@ -18,9 +18,9 @@ final class ResolutionOverlayController {
     private var window: NSWindow?
     private var dismissTask: Task<Void, Never>?
     
-    private let settingsManager: any SettingsManaging
+    private let settingsManager: SettingsManager
 
-    init(settingsManager: any SettingsManaging) {
+    init(settingsManager: SettingsManager) {
         self.settingsManager = settingsManager
     }
 

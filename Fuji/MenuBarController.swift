@@ -18,7 +18,7 @@ final class MenuBarController: NSObject, NSMenuDelegate {
     
     private let displayManager: any DisplayManaging
     private let resolutionOverlayController: ResolutionOverlayController
-    private let settingsManager: any SettingsManaging
+    private let settingsManager: SettingsManager
     
     private var statusItem: NSStatusItem!
     private var menu: NSMenu!
@@ -31,7 +31,7 @@ final class MenuBarController: NSObject, NSMenuDelegate {
     init(
         displayManager: any DisplayManaging,
         resolutionOverlayController: ResolutionOverlayController,
-        settingsManager: any SettingsManaging
+        settingsManager: SettingsManager
     ) {
         self.displayManager = displayManager
         self.settingsManager = settingsManager

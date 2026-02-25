@@ -13,8 +13,10 @@ import SwiftUI
 /// and optionally recording a keyboard shortcut. Supports both creating new presets and
 /// editing existing ones.
 struct PresetEditorSheet: View {
+    
+    @Environment(SettingsManager.self) private var settingsManager
+    
     let displayManager: any DisplayManaging
-    let settingsManager: any SettingsManaging
     let preset: ResolutionPreset?
     let onSave: ((ResolutionPreset) -> Void)?
 
@@ -322,8 +324,8 @@ private struct DisplayModeSelector: View {
 #Preview {
     PresetEditorSheet(
         displayManager: MockDisplayManager.preview,
-        settingsManager: MockSettingsManager.preview,
         preset: nil,
         onSave: nil
     )
+    .environment(SettingsManager(defaults: .preview))
 }

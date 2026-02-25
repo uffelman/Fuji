@@ -26,9 +26,9 @@ struct FujiApp: App {
         Settings {
             SettingsView(
                 displayManager: container.displayManager,
-                settingsManager: container.settingsManager,
                 onPresetsChanged: appDelegate.updateMenuBarAndKeyboardShortcuts
             )
+            .environment(container.settingsManager)
             .frame(
                 width: SettingsViewMetrics.size.width,
                 height: SettingsViewMetrics.size.height
