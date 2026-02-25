@@ -27,7 +27,14 @@ final class KeyboardShortcutManager {
     private let resolutionOverlayController: ResolutionOverlayController
 
     var onShortcutTriggered: ((ResolutionPreset) -> Void)?
-    
+
+    /// Called when an increment/decrement hotkey is triggered.
+    /// The Bool parameter is `true` for increase, `false` for decrease.
+    var onIncrementTriggered: ((Bool) -> Void)?
+
+    private var incrementUpHotKeyID: UInt32?
+    private var incrementDownHotKeyID: UInt32?
+
     var registeredHotKeyCount: Int {
         return registeredHotKeys.count
     }
@@ -104,6 +111,19 @@ final class KeyboardShortcutManager {
         let hotkeyIDValue = hotKeyID.id
         Logger.app.info("Hotkey pressed with ID: \(hotkeyIDValue)")
         Task { @MainActor in
+            // Check if this is an increment/decrement hotkey
+            if hotkeyIDValue == self.incrementUpHotKeyID {
+                Logger.app.info("Increment up hotkey pressed")
+                self.onIncrementTriggered?(true)
+                return
+            }
+            if hotkeyIDValue == self.incrementDownHotKeyID {
+                Logger.app.info("Increment down hotkey pressed")
+                self.onIncrementTriggered?(false)
+                return
+            }
+
+            // Otherwise check preset hotkeys
             if let entry = registeredHotKeys[hotkeyIDValue] {
                 Logger.app.info("Found registered hotkey: \(entry.shortcut.displayString)")
                 if let preset = settingsManager.preset(for: entry.shortcut) {
@@ -239,12 +259,33 @@ final class KeyboardShortcutManager {
     func refreshHotKeys() {
         unregisterAllHotKeys()
 
+        // Reset increment tracking
+        incrementUpHotKeyID = nil
+        incrementDownHotKeyID = nil
+
         // Check accessibility permissions
         let hasPermission = permissionsManager.isAccessibilityTrusted
         if !hasPermission {
             Logger.app.error("⚠️ WARNING: Accessibility permissions not granted. Global hotkeys will not work.")
             Logger.app.error("   Please grant accessibility access in System Settings > Privacy & Security > Accessibility")
             // Don't return - attempt to register anyway as permissions might be pending
+        }
+
+        // Register increment shortcuts if enabled
+        if settingsManager.enableIncrementShortcuts {
+            let upShortcut = settingsManager.effectiveIncrementUpShortcut
+            let upID = nextHotKeyID
+            if registerHotKey(for: upShortcut) {
+                incrementUpHotKeyID = upID
+                Logger.app.info("Registered increment up hotkey: \(upShortcut.displayString)")
+            }
+
+            let downShortcut = settingsManager.effectiveIncrementDownShortcut
+            let downID = nextHotKeyID
+            if registerHotKey(for: downShortcut) {
+                incrementDownHotKeyID = downID
+                Logger.app.info("Registered increment down hotkey: \(downShortcut.displayString)")
+            }
         }
 
         Logger.app.info("Refreshing hotkeys, found \(self.settingsManager.presets.count) presets")
@@ -264,9 +305,11 @@ final class KeyboardShortcutManager {
             }
         }
         Logger.app.info("Hotkey registration complete. Total registered: \(self.registeredHotKeys.count)/\(successCount) attempted")
-        
+
         // If we failed to register some hotkeys, schedule a retry
-        let expectedCount = settingsManager.presets.filter { $0.keyboardShortcut != nil }.count
+        let expectedPresetCount = settingsManager.presets.filter { $0.keyboardShortcut != nil }.count
+        let expectedIncrementCount = settingsManager.enableIncrementShortcuts ? 2 : 0
+        let expectedCount = expectedPresetCount + expectedIncrementCount
         if registeredHotKeys.count < expectedCount {
             Logger.app.error("⚠️ Not all hotkeys registered. Will retry in 2 seconds...")
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in

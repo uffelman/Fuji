@@ -16,7 +16,15 @@ protocol SettingsManaging: AnyObject {
     var presets: [ResolutionPreset] { get }
     var showInDock: Bool { get set }
     var showResolutionOverlay: Bool { get set }
-    
+    var enableIncrementShortcuts: Bool { get set }
+    var incrementUpShortcut: KeyboardShortcut? { get set }
+    var incrementDownShortcut: KeyboardShortcut? { get set }
+
+    /// The effective increment-up shortcut, falling back to the default.
+    var effectiveIncrementUpShortcut: KeyboardShortcut { get }
+    /// The effective increment-down shortcut, falling back to the default.
+    var effectiveIncrementDownShortcut: KeyboardShortcut { get }
+
     func addPreset(_ preset: ResolutionPreset)
     func updatePreset(_ preset: ResolutionPreset)
     func deletePreset(_ preset: ResolutionPreset)
@@ -37,6 +45,9 @@ final class SettingsManager: SettingsManaging {
     private let launchAtLoginKey = "launchAtLogin"
     private let showInDockKey = "showInDock"
     private let showResolutionOverlayKey = "showResolutionOverlay"
+    private let enableIncrementShortcutsKey = "enableIncrementShortcuts"
+    private let incrementUpShortcutKey = "incrementUpShortcut"
+    private let incrementDownShortcutKey = "incrementDownShortcut"
 
     private(set) var presets: [ResolutionPreset] = []
 
@@ -58,6 +69,53 @@ final class SettingsManager: SettingsManaging {
         set {
             UserDefaults.standard.set(newValue, forKey: showResolutionOverlayKey)
         }
+    }
+
+    var enableIncrementShortcuts: Bool {
+        get { UserDefaults.standard.bool(forKey: enableIncrementShortcutsKey) }
+        set { UserDefaults.standard.set(newValue, forKey: enableIncrementShortcutsKey) }
+    }
+
+    var incrementUpShortcut: KeyboardShortcut? {
+        get {
+            guard let data = UserDefaults.standard.data(forKey: incrementUpShortcutKey) else {
+                return nil
+            }
+            return try? JSONDecoder().decode(KeyboardShortcut.self, from: data)
+        }
+        set {
+            if let newValue {
+                let data = try? JSONEncoder().encode(newValue)
+                UserDefaults.standard.set(data, forKey: incrementUpShortcutKey)
+            } else {
+                UserDefaults.standard.removeObject(forKey: incrementUpShortcutKey)
+            }
+        }
+    }
+
+    var incrementDownShortcut: KeyboardShortcut? {
+        get {
+            guard let data = UserDefaults.standard.data(forKey: incrementDownShortcutKey) else {
+                return nil
+            }
+            return try? JSONDecoder().decode(KeyboardShortcut.self, from: data)
+        }
+        set {
+            if let newValue {
+                let data = try? JSONEncoder().encode(newValue)
+                UserDefaults.standard.set(data, forKey: incrementDownShortcutKey)
+            } else {
+                UserDefaults.standard.removeObject(forKey: incrementDownShortcutKey)
+            }
+        }
+    }
+
+    var effectiveIncrementUpShortcut: KeyboardShortcut {
+        incrementUpShortcut ?? .defaultIncrementUp
+    }
+
+    var effectiveIncrementDownShortcut: KeyboardShortcut {
+        incrementDownShortcut ?? .defaultIncrementDown
     }
 
     init() {
@@ -87,7 +145,8 @@ final class SettingsManager: SettingsManaging {
         UserDefaults.standard.register(defaults: [
             launchAtLoginKey: false,
             showInDockKey: false,
-            showResolutionOverlayKey: true
+            showResolutionOverlayKey: true,
+            enableIncrementShortcutsKey: true
         ])
     }
 
@@ -170,7 +229,12 @@ final class MockSettingsManager: SettingsManaging {
     var launchAtLogin = false
     var showInDock = false
     var showResolutionOverlay = true
-    
+    var enableIncrementShortcuts = true
+    var incrementUpShortcut: KeyboardShortcut?
+    var incrementDownShortcut: KeyboardShortcut?
+    var effectiveIncrementUpShortcut: KeyboardShortcut { incrementUpShortcut ?? .defaultIncrementUp }
+    var effectiveIncrementDownShortcut: KeyboardShortcut { incrementDownShortcut ?? .defaultIncrementDown }
+
     func addPreset(_ preset: ResolutionPreset) {}
     
     func updatePreset(_ preset: ResolutionPreset) {}

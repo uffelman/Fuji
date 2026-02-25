@@ -53,7 +53,10 @@ struct SettingsView<DM: DisplayManaging, SM: SettingsManaging>: View {
                         onPresetsChanged: onPresetsChanged
                     )
                 case .general:
-                    GeneralSettingsTab(settingsManager: settingsManager)
+                    GeneralSettingsTab(
+                        settingsManager: settingsManager,
+                        onIncrementSettingsChanged: onPresetsChanged
+                    )
                 case .about:
                     AboutSettingsTab()
                 }
@@ -68,7 +71,7 @@ struct SettingsView<DM: DisplayManaging, SM: SettingsManaging>: View {
 
 /// Layout constants for the settings window.
 enum SettingsViewMetrics {
-    static let size = CGSize(width: 500, height: 470)
+    static let size = CGSize(width: 500, height: 540)
 }
 
 /// A single button in the custom settings tab bar.

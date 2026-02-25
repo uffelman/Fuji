@@ -17,6 +17,14 @@ struct KeyboardShortcut: Codable, Hashable, Equatable {
     let keyCode: UInt32
     let modifiers: UInt32
 
+    /// Default shortcut for incrementing resolution: ⌃⌥↑
+    static let defaultIncrementUp = KeyboardShortcut(
+        keyCode: 126, modifiers: UInt32(controlKey) | UInt32(optionKey))
+
+    /// Default shortcut for decrementing resolution: ⌃⌥↓
+    static let defaultIncrementDown = KeyboardShortcut(
+        keyCode: 125, modifiers: UInt32(controlKey) | UInt32(optionKey))
+
     /// A human-readable representation of the keyboard shortcut.
     ///
     /// Uses Unicode symbols for modifier keys (⌃ ⌥ ⇧ ⌘) followed by the key character.

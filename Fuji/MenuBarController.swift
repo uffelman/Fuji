@@ -14,7 +14,7 @@ import SwiftUI
 /// available displays, resolution options, presets, and app controls. Handles user interactions
 /// and coordinates with DisplayManager for resolution changes.
 @MainActor
-final class MenuBarController: NSObject {
+final class MenuBarController: NSObject, NSMenuDelegate {
     
     private let displayManager: any DisplayManaging
     private let resolutionOverlayController: ResolutionOverlayController
@@ -23,6 +23,8 @@ final class MenuBarController: NSObject {
     private var statusItem: NSStatusItem!
     private var menu: NSMenu!
     private var settingsWindow: NSWindow?
+    private var increaseResolutionItem: NSMenuItem?
+    private var decreaseResolutionItem: NSMenuItem?
     
     var makeSettingsViewController: (() -> NSViewController?)?
 
@@ -58,6 +60,7 @@ final class MenuBarController: NSObject {
     func rebuildMenu() {
         menu = NSMenu()
         menu.autoenablesItems = false
+        menu.delegate = self
 
         // Add displays and their resolutions
         for display in displayManager.displays {
@@ -101,6 +104,33 @@ final class MenuBarController: NSObject {
                 menu.addItem(presetItem)
             }
         }
+
+        menu.addItem(NSMenuItem.separator())
+
+        // Increment/Decrement resolution items
+        let increaseItem = NSMenuItem(
+            title: "Increase Resolution",
+            action: #selector(increaseResolution),
+            keyEquivalent: ""
+        )
+        increaseItem.target = self
+        if settingsManager.enableIncrementShortcuts {
+            increaseItem.toolTip = "Shortcut: \(settingsManager.effectiveIncrementUpShortcut.displayString)"
+        }
+        self.increaseResolutionItem = increaseItem
+        menu.addItem(increaseItem)
+
+        let decreaseItem = NSMenuItem(
+            title: "Decrease Resolution",
+            action: #selector(decreaseResolution),
+            keyEquivalent: ""
+        )
+        decreaseItem.target = self
+        if settingsManager.enableIncrementShortcuts {
+            decreaseItem.toolTip = "Shortcut: \(settingsManager.effectiveIncrementDownShortcut.displayString)"
+        }
+        self.decreaseResolutionItem = decreaseItem
+        menu.addItem(decreaseItem)
 
         menu.addItem(NSMenuItem.separator())
 
@@ -490,6 +520,70 @@ final class MenuBarController: NSObject {
         }
         image.isTemplate = false
         return image
+    }
+
+    // MARK: - NSMenuDelegate
+
+    func menuWillOpen(_ menu: NSMenu) {
+        updateIncrementMenuItemState()
+    }
+
+    /// Updates the enabled state of increment/decrement menu items based on the display under the mouse.
+    private func updateIncrementMenuItemState() {
+        guard let display = displayManager.displayUnderMouse() else {
+            increaseResolutionItem?.isEnabled = false
+            decreaseResolutionItem?.isEnabled = false
+            return
+        }
+
+        increaseResolutionItem?.isEnabled = display.nextHigherResolution() != nil
+        decreaseResolutionItem?.isEnabled = display.nextLowerResolution() != nil
+    }
+
+    // MARK: - Resolution Increment
+
+    @objc private func increaseResolution() {
+        incrementResolution(increase: true)
+    }
+
+    @objc private func decreaseResolution() {
+        incrementResolution(increase: false)
+    }
+
+    /// Steps the display under the mouse cursor to the next resolution group.
+    ///
+    /// Finds the display under the mouse, determines the next higher or lower resolution group,
+    /// applies the mode change, shows the overlay, and rebuilds the menu. Beeps on failure.
+    ///
+    /// - Parameter increase: If true, steps to a higher resolution; if false, steps lower
+    func incrementResolution(increase: Bool) {
+        displayManager.refreshDisplays()
+
+        guard let display = displayManager.displayUnderMouse() else {
+            NSSound.beep()
+            return
+        }
+
+        let targetMode: DisplayMode? = increase
+            ? display.nextHigherResolution()
+            : display.nextLowerResolution()
+
+        guard let mode = targetMode else {
+            NSSound.beep()
+            return
+        }
+
+        let success = displayManager.setDisplayMode(mode, for: display.id)
+        if success {
+            displayManager.refreshDisplays()
+            rebuildMenu()
+            resolutionOverlayController.show(
+                displayName: display.name,
+                resolution: mode.displayString
+            )
+        } else {
+            NSSound.beep()
+        }
     }
 
     /// Displays an alert dialog with the given title and message.

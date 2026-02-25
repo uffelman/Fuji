@@ -46,6 +46,13 @@ protocol DisplayManaging: AnyObject {
     /// - Returns: `true` if all resets were successful, `false` otherwise
     @discardableResult
     func resetAllToDefault() -> Bool
+
+    /// Returns the display currently under the mouse cursor.
+    ///
+    /// Uses NSEvent.mouseLocation and NSScreen to determine which display
+    /// the cursor is positioned on.
+    /// - Returns: The Display under the mouse cursor, or nil if it cannot be determined
+    func displayUnderMouse() -> Display?
 }
 
 /// Manages all connected displays and their resolution modes.
@@ -507,6 +514,23 @@ final class DisplayManager: DisplayManaging {
         return setMultipleDisplayModes(configurations)
     }
 
+    func displayUnderMouse() -> Display? {
+        let mouseLocation = NSEvent.mouseLocation
+
+        for screen in NSScreen.screens {
+            if screen.frame.contains(mouseLocation) {
+                guard let screenNumber = screen.deviceDescription[
+                    NSDeviceDescriptionKey("NSScreenNumber")
+                ] as? CGDirectDisplayID else { continue }
+
+                return displays.first { $0.id == screenNumber }
+            }
+        }
+
+        // Fallback: return the main display
+        return displays.first { $0.isMain }
+    }
+
     /// Registers a callback to monitor display configuration changes.
     ///
     /// This method sets up system-level notifications for display events including
@@ -570,5 +594,9 @@ final class MockDisplayManager: DisplayManaging {
     @discardableResult
     func resetAllToDefault() -> Bool {
         return true
+    }
+
+    func displayUnderMouse() -> Display? {
+        return displays.first
     }
 }

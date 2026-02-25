@@ -16,10 +16,18 @@ import SwiftUI
 /// that are never compiled into release builds.
 struct GeneralSettingsTab: View {
     let settingsManager: any SettingsManaging
+    let onIncrementSettingsChanged: (() -> Void)?
 
     @State private var launchAtLogin = false
     @State private var showInDock = false
     @State private var showResolutionOverlay = true
+    @State private var enableIncrementShortcuts = true
+    @State private var incrementUpShortcut: KeyboardShortcut?
+    @State private var incrementDownShortcut: KeyboardShortcut?
+    @State private var isRecordingUpShortcut = false
+    @State private var isRecordingDownShortcut = false
+
+    private let shortcutRecorder = ShortcutRecorder()
 
     // Kept inside the view so the toggle stays reactive.
     // Compiled away entirely in release builds.
@@ -43,7 +51,7 @@ struct GeneralSettingsTab: View {
                 )
 
                 Divider()
-                
+
                 SettingsFormRow(
                     label: "Launch at Login",
                     isOn: $launchAtLogin,
@@ -62,6 +70,58 @@ struct GeneralSettingsTab: View {
                         settingsManager.showInDock = newValue
                     }
                 )
+                
+                Divider()
+                
+                SettingsFormRow(
+                    label: "Increment resolutions with keyboard shortcuts",
+                    isOn: $enableIncrementShortcuts,
+                    onChange: { newValue in
+                        settingsManager.enableIncrementShortcuts = newValue
+                        onIncrementSettingsChanged?()
+                    }
+                )
+
+                if enableIncrementShortcuts {
+                    IncrementShortcutRow(
+                        label: "Increase",
+                        shortcut: incrementUpShortcut,
+                        defaultShortcut: .defaultIncrementUp,
+                        isRecording: $isRecordingUpShortcut,
+                        shortcutRecorder: shortcutRecorder,
+                        onShortcutChanged: { newShortcut in
+                            incrementUpShortcut = newShortcut
+                            settingsManager.incrementUpShortcut = newShortcut
+                            onIncrementSettingsChanged?()
+                        },
+                        onReset: {
+                            incrementUpShortcut = nil
+                            settingsManager.incrementUpShortcut = nil
+                            onIncrementSettingsChanged?()
+                        }
+                    )
+
+                    Divider()
+                        .padding(.leading, 14)
+
+                    IncrementShortcutRow(
+                        label: "Decrease",
+                        shortcut: incrementDownShortcut,
+                        defaultShortcut: .defaultIncrementDown,
+                        isRecording: $isRecordingDownShortcut,
+                        shortcutRecorder: shortcutRecorder,
+                        onShortcutChanged: { newShortcut in
+                            incrementDownShortcut = newShortcut
+                            settingsManager.incrementDownShortcut = newShortcut
+                            onIncrementSettingsChanged?()
+                        },
+                        onReset: {
+                            incrementDownShortcut = nil
+                            settingsManager.incrementDownShortcut = nil
+                            onIncrementSettingsChanged?()
+                        }
+                    )
+                }
             }
             .background(Color(.controlBackgroundColor))
             .clipShape(.rect(cornerRadius: 10))
@@ -111,6 +171,10 @@ struct GeneralSettingsTab: View {
         .onAppear {
             launchAtLogin = settingsManager.launchAtLogin
             showInDock = settingsManager.showInDock
+            showResolutionOverlay = settingsManager.showResolutionOverlay
+            enableIncrementShortcuts = settingsManager.enableIncrementShortcuts
+            incrementUpShortcut = settingsManager.incrementUpShortcut
+            incrementDownShortcut = settingsManager.incrementDownShortcut
             #if DEBUG
             forceOnboarding = DebugSettings.alwaysShowOnboarding
             #endif
@@ -157,6 +221,99 @@ private struct SettingsFormRow: View {
     }
 }
 
+/// A row for displaying and recording an increment/decrement keyboard shortcut.
+///
+/// Shows the current shortcut (or default), a reset button when custom, and a Record/Cancel toggle.
+/// Mirrors the shortcut recording pattern from ``PresetEditorSheet``.
+private struct IncrementShortcutRow: View {
+    let label: String
+    let shortcut: KeyboardShortcut?
+    let defaultShortcut: KeyboardShortcut
+    @Binding var isRecording: Bool
+    let shortcutRecorder: ShortcutRecorder
+    let onShortcutChanged: (KeyboardShortcut?) -> Void
+    let onReset: () -> Void
+
+    private var effectiveShortcut: KeyboardShortcut {
+        shortcut ?? defaultShortcut
+    }
+
+    private var isCustom: Bool {
+        shortcut != nil
+    }
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Text(label)
+                .font(.system(size: 13.5))
+                .frame(width: 65, alignment: .leading)
+
+            if isRecording {
+                Text("Press a key combination...")
+                    .font(.system(size: 12))
+                    .foregroundStyle(Color.accentColor.opacity(0.7))
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color.accentColor.opacity(0.08))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .strokeBorder(Color.accentColor.opacity(0.2), lineWidth: 1)
+                    )
+                    .clipShape(.rect(cornerRadius: 6))
+            } else {
+                Text(effectiveShortcut.displayString)
+                    .font(.system(size: 12, weight: .medium, design: .monospaced))
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color(.separatorColor).opacity(0.3))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .strokeBorder(Color(.separatorColor), lineWidth: 1)
+                    )
+                    .clipShape(.rect(cornerRadius: 6))
+            }
+
+            // Reset to default button (only shown when a custom shortcut is set)
+            if isCustom && !isRecording {
+                Button {
+                    onReset()
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 14))
+                        .foregroundStyle(.tertiary)
+                }
+                .buttonStyle(.plain)
+                .help("Reset to default")
+            }
+
+            Spacer()
+
+            PillButton(
+                isRecording ? "Cancel" : "Record",
+                style: .monochrome
+            ) {
+                if isRecording {
+                    shortcutRecorder.stopRecording()
+                    isRecording = false
+                } else {
+                    isRecording = true
+                    shortcutRecorder.onShortcutRecorded = { recorded in
+                        onShortcutChanged(recorded)
+                        isRecording = false
+                    }
+                    shortcutRecorder.startRecording()
+                }
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 11)
+    }
+}
+
 #Preview {
-    GeneralSettingsTab(settingsManager: MockSettingsManager.preview)
+    GeneralSettingsTab(
+        settingsManager: MockSettingsManager.preview,
+        onIncrementSettingsChanged: nil
+    )
 }

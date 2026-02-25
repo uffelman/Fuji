@@ -88,6 +88,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 self?.menuBarController.rebuildMenu()
             }
         }
+
+        // Handle increment/decrement triggers
+        keyboardShortcutManager.onIncrementTriggered = { [weak self] increase in
+            MainActor.assumeIsolated {
+                self?.menuBarController.incrementResolution(increase: increase)
+            }
+        }
         
         // Re-register shortcuts when app becomes active (e.g., settings window opened)
         // This helps recover from launch-time registration failures
@@ -99,7 +106,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             MainActor.assumeIsolated {
                 guard let self else { return }
                 // Only re-register if we don't have all shortcuts registered
-                let expectedShortcutCount = self.container.settingsManager.presets.filter { $0.keyboardShortcut != nil }.count
+                let expectedPresetCount = self.container.settingsManager.presets.filter { $0.keyboardShortcut != nil }.count
+                let expectedIncrementCount = self.container.settingsManager.enableIncrementShortcuts ? 2 : 0
+                let expectedShortcutCount = expectedPresetCount + expectedIncrementCount
                 if self.keyboardShortcutManager.registeredHotKeyCount != expectedShortcutCount {
                     Logger.app.info("App became active - re-registering shortcuts (expected: \(expectedShortcutCount), current: \(self.keyboardShortcutManager.registeredHotKeyCount))")
                     self.keyboardShortcutManager.refreshHotKeys()
