@@ -71,7 +71,7 @@ struct SettingsView<DM: DisplayManaging>: View {
 
 /// Layout constants for the settings window.
 enum SettingsViewMetrics {
-    static let size = CGSize(width: 500, height: 540)
+    static let size = CGSize(width: 500, height: 470)
 }
 
 /// A single button in the custom settings tab bar.
