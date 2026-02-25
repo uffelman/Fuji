@@ -82,7 +82,7 @@ struct GeneralSettingsTab: View {
                     }
                 )
 
-                if enableIncrementShortcuts {
+                VStack(spacing: 0) {
                     IncrementShortcutRow(
                         label: "Increase",
                         shortcut: incrementUpShortcut,
@@ -102,7 +102,6 @@ struct GeneralSettingsTab: View {
                     )
 
                     Divider()
-                        .padding(.leading, 14)
 
                     IncrementShortcutRow(
                         label: "Decrease",
@@ -122,9 +121,14 @@ struct GeneralSettingsTab: View {
                         }
                     )
                 }
+                .padding(.leading, 14)
+                .frame(maxHeight: enableIncrementShortcuts ? .none : 0)
+                .clipped()
+                .allowsHitTesting(enableIncrementShortcuts)
             }
             .background(Color(.controlBackgroundColor))
             .clipShape(.rect(cornerRadius: 10))
+            .animation(.easeInOut(duration: 0.25), value: enableIncrementShortcuts)
 
             // ── Developer section ─────────────────────────────────────────
             // Visible only in Debug builds. The entire block is stripped by the
