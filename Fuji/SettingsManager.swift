@@ -30,6 +30,7 @@ final class SettingsManager {
     var launchAtLogin: Bool {
         didSet {
             defaults.set(launchAtLogin, forKey: Keys.launchAtLogin)
+            updateLaunchAtLogin(enabled: launchAtLogin)
         }
     }
     
