@@ -36,6 +36,7 @@ final class SettingsManager {
     var showInDock: Bool {
         didSet {
             defaults.set(showInDock, forKey: Keys.showInDock)
+            updateDockVisibility()
         }
     }
     
