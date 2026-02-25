@@ -295,6 +295,7 @@ final class MenuBarController: NSObject {
         Task {
             let success = displayManager.setDisplayMode(mode, for: displayID)
             if success {
+                displayManager.refreshDisplays()
                 rebuildMenu()
                 if let display = displayManager.displays.first(where: { $0.id == displayID }) {
                     resolutionOverlayController.show(
@@ -336,6 +337,7 @@ final class MenuBarController: NSObject {
         Task {
             let success = displayManager.setMultipleDisplayModes(configurations)
             if success {
+                displayManager.refreshDisplays()
                 rebuildMenu()
                 let overlayLines = configurations.compactMap { config -> OverlayLine? in
                     guard let display = displayManager.displays.first(where: { $0.id == config.displayID }) else {
@@ -367,6 +369,7 @@ final class MenuBarController: NSObject {
     @objc private func resetToDefault() {
         let success = displayManager.resetAllToDefault()
         if success {
+            displayManager.refreshDisplays()
             rebuildMenu()
             let overlayLines = displayManager.displays.compactMap { display -> OverlayLine? in
                 guard let defaultMode = display.defaultMode else { return nil }
