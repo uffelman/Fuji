@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+    <channel>
+        <title>Fuji Updates</title>
+        <link>https://uffelman.github.io/Fuji/updates/appcast.xml</link>
+        <description>Updates for Fuji</description>
+        <language>en</language>
+        <item>
+            <title>Version 0.1.0</title>
+            <pubDate>Thu, 05 Mar 2026 08:16:57 +0000</pubDate>
+            <sparkle:version>0.1.0</sparkle:version>
+            <sparkle:shortVersionString>0.1.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+            <enclosure
+                url="https://github.com/uffelman/Fuji/releases/download/v0.1.0/Fuji-v0.1.0-macos.zip"
+                type="application/octet-stream"
+                sparkle:edSignature="shSB7I1CujMPu9x0ehs9jpdKhQM3reEDstxzwoidE5k/VsekQg48Cy39VQGA5BVArLB5LakNLyopKDSFRmIUBQ=="
+                length="6280704"
+            />
+        </item>
+    </channel>
+</rss>
