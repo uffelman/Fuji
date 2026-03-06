@@ -1,0 +1,18 @@
+name: Workflow Guards
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  repository-guards:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate Xcode project signing settings
+        run: ./scripts/check-no-hardcoded-team.sh --repo
+
+      - name: Validate self-hosted runners are not used on PR workflows
+        run: ./scripts/check-no-self-hosted-pr-workflows.sh
