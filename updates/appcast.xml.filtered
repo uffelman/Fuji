@@ -6,16 +6,16 @@
         <description>Updates for Fuji</description>
         <language>en</language>
         <item>
-            <title>Version 0.1.0</title>
-            <pubDate>Thu, 05 Mar 2026 08:16:57 +0000</pubDate>
-            <sparkle:version>0.1.0</sparkle:version>
-            <sparkle:shortVersionString>0.1.0</sparkle:shortVersionString>
+            <title>Version 0.1.3</title>
+            <pubDate>Fri, 06 Mar 2026 03:18:39 +0000</pubDate>
+            <sparkle:version>0.1.3</sparkle:version>
+            <sparkle:shortVersionString>0.1.3</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
             <enclosure
-                url="https://github.com/uffelman/Fuji/releases/download/v0.1.0/Fuji-v0.1.0-macos.zip"
+                url="https://github.com/uffelman/Fuji/releases/download/v0.1.3/Fuji-v0.1.3-macos.zip"
                 type="application/octet-stream"
-                sparkle:edSignature="shSB7I1CujMPu9x0ehs9jpdKhQM3reEDstxzwoidE5k/VsekQg48Cy39VQGA5BVArLB5LakNLyopKDSFRmIUBQ=="
-                length="6280704"
+                sparkle:edSignature="Q2VLr7qsd00cPjt/spEO/Dv6G19Bzo/MjnTG6STeC7iKw07DvxqlW2uJA0tiXf4jsSM3SlGGvHKqoCLBaRucDQ=="
+                length="6231953"
             />
         </item>
     </channel>
