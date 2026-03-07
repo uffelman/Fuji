@@ -20,15 +20,15 @@
         </item>
         <item>
             <title>Version 0.1.0</title>
-            <pubDate>Sat, 07 Mar 2026 08:25:30 +0000</pubDate>
+            <pubDate>Sat, 07 Mar 2026 08:58:14 +0000</pubDate>
             <sparkle:version>0.1.0</sparkle:version>
             <sparkle:shortVersionString>0.1.0</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
             <enclosure
                 url="https://github.com/uffelman/Fuji/releases/download/v0.1.0/Fuji-v0.1.0-macos.zip"
                 type="application/octet-stream"
-                sparkle:edSignature="WS0SfHyumanQI28pgDuF2cVbGkxPNk6HJJdYZC+MijcEY90oRWzLJX2jRG/+JAXZurkcMigtZmxODNA5ZGr5CQ=="
-                length="6231926"
+                sparkle:edSignature="1YO707CGwMqgklpm1T4eCOD8Kglv3P3OVO57pEFdfU3XA0t2yQ1MuJDZUd6qu5bvyJS5FKmmW8COHumarg6DBw=="
+                length="6231964"
             />
         </item>
     </channel>
