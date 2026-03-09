@@ -19,6 +19,8 @@ Fuji lives in your menu bar and gives you fast access to every available resolut
 - **Automatic updates** — Fuji checks for updates in the background so you always have the latest version
 - **No trackers, no analytics** — Fuji's only network access is checking for updates, and you can turn that off too
 
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/stephenu)
+
 ## Requirements
 
 - macOS 26.0 or later
