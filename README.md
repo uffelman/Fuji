@@ -1,6 +1,6 @@
 # Fuji
 
-A lightweight macOS menu bar app for switching display resolutions in a click.
+A lightweight macOS menu bar app for switching display resolutions with a keyboard shortcut or a click.
 
 <p align="center">
   <img src="Media/fuji-demo.gif" alt="Fuji demo" width="600">
