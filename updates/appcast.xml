@@ -7,15 +7,18 @@
         <language>en</language>
         <item>
             <title>Version 0.1.0</title>
-            <pubDate>Sat, 07 Mar 2026 08:58:14 +0000</pubDate>
+            <pubDate>Mon, 09 Mar 2026 03:23:24 +0000</pubDate>
             <sparkle:version>0.1.0</sparkle:version>
             <sparkle:shortVersionString>0.1.0</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+                    <description><![CDATA[
+<p dir="auto"><strong>Full Changelog</strong>: <a href="https://github.com/uffelman/Fuji/commits/v0.1.0">https://github.com/uffelman/Fuji/commits/v0.1.0</a></p>
+                    ]]></description>
             <enclosure
                 url="https://github.com/uffelman/Fuji/releases/download/v0.1.0/Fuji-v0.1.0-macos.zip"
                 type="application/octet-stream"
-                sparkle:edSignature="1YO707CGwMqgklpm1T4eCOD8Kglv3P3OVO57pEFdfU3XA0t2yQ1MuJDZUd6qu5bvyJS5FKmmW8COHumarg6DBw=="
-                length="6231964"
+                sparkle:edSignature="Cue3DvkqfL25FVhJ5NKzqBfP+MdFDCAd8Nk/Fhz9sU2qDZeBa347Av7y+BSow48eeIEhgerDhIa3HFsZhfjvCw=="
+                length="6231933"
             />
         </item>
     </channel>
