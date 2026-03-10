@@ -381,30 +381,34 @@ final class DisplayManager: DisplayManaging {
     ///   - displayID: The Core Graphics display ID
     /// - Returns: `true` if the mode change was successful, `false` otherwise
     func setDisplayMode(_ mode: DisplayMode, for displayID: CGDirectDisplayID) -> Bool {
-        // Include duplicate modes so we have all colour-format variants to choose from.
-        // We then prefer the variant whose ioFlags match the *current* mode, preserving
-        // the display's existing HDR/SDR state rather than accidentally toggling it.
-        // (The original code used .first on this full list without ioFlags matching,
-        // which could pick an HDR variant and cause a blackout + monitor HDR OSD.)
-        let options = [kCGDisplayShowDuplicateLowResolutionModes: kCFBooleanTrue] as CFDictionary
-        guard let modesArray = CGDisplayCopyAllDisplayModes(displayID, options) as? [CGDisplayMode]
+        // Search the canonical mode set first. This excludes colour-depth
+        // duplicates (e.g. HDR/10-bit variants) that would cause the display
+        // to re-negotiate its HDMI/DP signal and produce a blackout.
+        guard let canonicalModes = CGDisplayCopyAllDisplayModes(displayID, nil) as? [CGDisplayMode]
         else {
             return false
         }
 
-        // Capture the current mode's ioFlags so we can preserve the colour format.
-        let currentIOFlags = CGDisplayCopyDisplayMode(displayID)?.ioFlags ?? 0
-
-        // Among all candidates matching the requested resolution, prefer the one whose
-        // ioFlags match the current mode (same colour depth / HDR state). Fall back to
-        // any match if none share the same flags (e.g. the target resolution has no
-        // SDR/HDR equivalent of the current format).
-        let candidates = modesArray.filter { cgMode in
+        let matchesMode: (CGDisplayMode) -> Bool = { cgMode in
             let isHiDPI = cgMode.pixelWidth > cgMode.width
             return cgMode.width == mode.width && cgMode.height == mode.height
                 && cgMode.refreshRate == mode.refreshRate && isHiDPI == mode.isHiDPI
         }
-        let targetMode = candidates.first { $0.ioFlags == currentIOFlags } ?? candidates.first
+
+        // Fall back to the full mode list for duplicate low-resolution modes
+        // (non-HiDPI versions of HiDPI resolutions) that only appear with
+        // kCGDisplayShowDuplicateLowResolutionModes.
+        let targetMode: CGDisplayMode? =
+            if let match = canonicalModes.first(where: matchesMode) {
+                match
+            } else if let allModes = CGDisplayCopyAllDisplayModes(
+                displayID,
+                [kCGDisplayShowDuplicateLowResolutionModes: kCFBooleanTrue] as CFDictionary
+            ) as? [CGDisplayMode] {
+                allModes.first(where: matchesMode)
+            } else {
+                nil
+            }
 
         guard let cgMode = targetMode else {
             Logger.app.error("Could not find matching display mode")
@@ -451,9 +455,6 @@ final class DisplayManager: DisplayManaging {
     func setMultipleDisplayModes(
         _ configurations: [(displayID: CGDirectDisplayID, mode: DisplayMode)]
     ) -> Bool {
-        // Same ioFlags-based matching as setDisplayMode: preserve each display's
-        // current colour format (HDR/SDR) rather than accidentally switching it.
-        let options = [kCGDisplayShowDuplicateLowResolutionModes: kCFBooleanTrue] as CFDictionary
         var config: CGDisplayConfigRef?
         var result = CGBeginDisplayConfiguration(&config)
         guard result == .success, let config = config else {
@@ -462,21 +463,33 @@ final class DisplayManager: DisplayManaging {
         }
 
         for (displayID, mode) in configurations {
+            // Same two-step lookup as setDisplayMode: canonical modes first to
+            // avoid colour-depth duplicates, full list as fallback.
             guard
-                let modesArray = CGDisplayCopyAllDisplayModes(displayID, options)
+                let canonicalModes = CGDisplayCopyAllDisplayModes(displayID, nil)
                     as? [CGDisplayMode]
             else {
                 CGCancelDisplayConfiguration(config)
                 return false
             }
 
-            let currentIOFlags = CGDisplayCopyDisplayMode(displayID)?.ioFlags ?? 0
-            let candidates = modesArray.filter { cgMode in
+            let matchesMode: (CGDisplayMode) -> Bool = { cgMode in
                 let isHiDPI = cgMode.pixelWidth > cgMode.width
                 return cgMode.width == mode.width && cgMode.height == mode.height
                     && cgMode.refreshRate == mode.refreshRate && isHiDPI == mode.isHiDPI
             }
-            let targetMode = candidates.first { $0.ioFlags == currentIOFlags } ?? candidates.first
+
+            let targetMode: CGDisplayMode? =
+                if let match = canonicalModes.first(where: matchesMode) {
+                    match
+                } else if let allModes = CGDisplayCopyAllDisplayModes(
+                    displayID,
+                    [kCGDisplayShowDuplicateLowResolutionModes: kCFBooleanTrue] as CFDictionary
+                ) as? [CGDisplayMode] {
+                    allModes.first(where: matchesMode)
+                } else {
+                    nil
+                }
 
             guard let cgMode = targetMode else {
                 CGCancelDisplayConfiguration(config)
