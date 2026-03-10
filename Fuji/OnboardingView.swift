@@ -176,10 +176,10 @@ private struct WelcomePage: View {
             // Feature list
             VStack(alignment: .leading, spacing: 14) {
                 FeatureRow(
-                    icon: "keyboard",
-                    color: .purple,
-                    title: "Hotkeys for Presets Too",
-                    description: "Assign custom global shortcuts to any named preset so you can jump to a specific configuration without touching the mouse."
+                    icon: "menubar.rectangle",
+                    color: .green,
+                    title: "Lives in Your Menu Bar",
+                    description: "Fuji stays out of your way — no Dock icon, no main window, always one click away."
                 )
                 FeatureRow(
                     icon: "rectangle.stack.fill",
@@ -188,10 +188,10 @@ private struct WelcomePage: View {
                     description: "Save your go-to display configurations and switch between them in one click from the menu bar."
                 )
                 FeatureRow(
-                    icon: "menubar.rectangle",
-                    color: .green,
-                    title: "Lives in Your Menu Bar",
-                    description: "Fuji stays out of your way — no Dock icon, no main window, always one click away."
+                    icon: "keyboard",
+                    color: .purple,
+                    title: "Hotkeys for Presets Too",
+                    description: "Assign custom global shortcuts to any named preset so you can jump to a specific configuration without touching the mouse."
                 )
             }
             .padding(.horizontal, 36)
