@@ -21,5 +21,26 @@
                 length="6231933"
             />
         </item>
+        <item>
+            <title>Version 0.1.1</title>
+            <pubDate>Tue, 10 Mar 2026 09:32:28 +0000</pubDate>
+            <sparkle:version>0.1.1</sparkle:version>
+            <sparkle:shortVersionString>0.1.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+                    <description><![CDATA[
+<h2 dir="auto">What's Changed</h2>
+<ul dir="auto">
+<li>Prominently feature step shortcuts on onboarding screen 1; revise copy by <a class="user-mention notranslate" data-hovercard-type="user" data-hovercard-url="/users/uffelman/hovercard" data-octo-click="hovercard-link-click" data-octo-dimensions="link_type:self" href="https://github.com/uffelman">@uffelman</a> in <a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="4046814173" data-permission-text="Title is private" data-url="https://github.com/uffelman/Fuji/issues/4" data-hovercard-type="pull_request" data-hovercard-url="/uffelman/Fuji/pull/4/hovercard" href="https://github.com/uffelman/Fuji/pull/4">#4</a></li>
+<li>Fix resolution switch causing display blackout and HDR mode activation by <a class="user-mention notranslate" data-hovercard-type="user" data-hovercard-url="/users/uffelman/hovercard" data-octo-click="hovercard-link-click" data-octo-dimensions="link_type:self" href="https://github.com/uffelman">@uffelman</a> in <a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="4049203071" data-permission-text="Title is private" data-url="https://github.com/uffelman/Fuji/issues/5" data-hovercard-type="pull_request" data-hovercard-url="/uffelman/Fuji/pull/5/hovercard" href="https://github.com/uffelman/Fuji/pull/5">#5</a></li>
+</ul>
+<p dir="auto"><strong>Full Changelog</strong>: <a class="commit-link" href="https://github.com/uffelman/Fuji/compare/v0.1.0...v0.1.1"><tt>v0.1.0...v0.1.1</tt></a></p>
+                    ]]></description>
+            <enclosure
+                url="https://github.com/uffelman/Fuji/releases/download/v0.1.1/Fuji-v0.1.1-macos.zip"
+                type="application/octet-stream"
+                sparkle:edSignature="hGCgJUqqt6IkR01cqyxT0nuA1VMgY1I5YsZe/1i7uW/HecvrtaFAyebVaPul2JT9pYc7EQCFSXPLukUJOLJnBA=="
+                length="6244964"
+            />
+        </item>
     </channel>
 </rss>
