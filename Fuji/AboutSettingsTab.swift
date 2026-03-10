@@ -15,16 +15,15 @@ struct AboutSettingsTab: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack(alignment: .top, spacing: 12) {
+            HStack(alignment: .top, spacing: 14) {
                 // App icon
-                let iconSize: CGFloat = 140
-                Image(nsImage: NSApp.applicationIconImage)
+                let iconSize: CGFloat = 120
+                Image("AppIconDisplay")
                     .resizable()
                     .frame(width: iconSize, height: iconSize)
                     .clipShape(.rect(cornerRadius: 18 / 80 * iconSize, style: .continuous))
                     .shadow(color: .accentColor.opacity(0.2), radius: 10, y: 4)
                     .frame(maxHeight: .infinity, alignment: .top)
-                    .offset(y: -10)
                 
                 VStack(alignment: .leading) {
                     // App name
@@ -46,6 +45,7 @@ struct AboutSettingsTab: View {
                         .multilineTextAlignment(.leading)
                         .padding(.bottom, 20)
                 }
+                .offset(y: 8)
             }
 
             // Divider

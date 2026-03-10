@@ -138,12 +138,12 @@ private struct WelcomePage: View {
         VStack(spacing: 0) {
             // Hero area
             VStack(spacing: 14) {
-                Image(systemName: "display.2")
+                let iconSize: CGFloat = 72
+                Image("AppIconDisplay")
                     .resizable()
-                    .scaledToFit()
-                    .frame(width: 72, height: 72)
-                    .foregroundStyle(.tint)
-                    .symbolRenderingMode(.hierarchical)
+                    .frame(width: iconSize, height: iconSize)
+                    .clipShape(.rect(cornerRadius: 18 / 80 * iconSize, style: .continuous))
+                    .shadow(color: .accentColor.opacity(0.2), radius: 10, y: 4)
 
                 Text("Welcome to Fuji")
                     .font(.system(size: 22, weight: .bold))
