@@ -56,8 +56,10 @@ struct PresetsSettingsTab<DM: DisplayManaging>: View {
                     .containerRelativeFrame(.vertical, alignment: .center)
                 } else {
                     VStack(spacing: 0) {
-                        ForEach(settingsManager.presets.indices, id: \.self) { index in
-                            let preset = settingsManager.presets[index]
+                        ForEach(settingsManager.presets) { preset in
+                            if preset.id != settingsManager.presets.first?.id {
+                                Divider()
+                            }
                             PresetRow(
                                 preset: preset,
                                 onEdit: {
@@ -67,10 +69,6 @@ struct PresetsSettingsTab<DM: DisplayManaging>: View {
                                     settingsManager.deletePreset(preset)
                                     onPresetsChanged?()
                                 })
-                            
-                            if index < settingsManager.presets.count - 1 {
-                                Divider()
-                            }
                         }
                         .padding(.trailing)
                     }
