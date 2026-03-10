@@ -381,10 +381,14 @@ final class DisplayManager: DisplayManaging {
     ///   - displayID: The Core Graphics display ID
     /// - Returns: `true` if the mode change was successful, `false` otherwise
     func setDisplayMode(_ mode: DisplayMode, for displayID: CGDirectDisplayID) -> Bool {
-        let options: CFDictionary =
-            [kCGDisplayShowDuplicateLowResolutionModes: kCFBooleanTrue] as CFDictionary
-
-        guard let modesArray = CGDisplayCopyAllDisplayModes(displayID, options) as? [CGDisplayMode]
+        // Do NOT pass kCGDisplayShowDuplicateLowResolutionModes here. That flag causes
+        // Core Graphics to include HDR/10-bit colour variants of each mode alongside the
+        // standard SDR variants. Using .first { } on that list can accidentally select an
+        // HDR duplicate, forcing the display to re-negotiate its HDMI/DP signal for HDR —
+        // which produces the brief blackout and the monitor's own "HDR enabled" OSD.
+        // Without the flag, Core Graphics returns only the canonical (SDR) mode for each
+        // resolution, matching what System Settings applies.
+        guard let modesArray = CGDisplayCopyAllDisplayModes(displayID, nil) as? [CGDisplayMode]
         else {
             return false
         }
@@ -441,9 +445,8 @@ final class DisplayManager: DisplayManaging {
     func setMultipleDisplayModes(
         _ configurations: [(displayID: CGDirectDisplayID, mode: DisplayMode)]
     ) -> Bool {
-        let options: CFDictionary =
-            [kCGDisplayShowDuplicateLowResolutionModes: kCFBooleanTrue] as CFDictionary
-
+        // Same reasoning as setDisplayMode: omit kCGDisplayShowDuplicateLowResolutionModes
+        // so Core Graphics returns only canonical SDR modes, avoiding accidental HDR switching.
         var config: CGDisplayConfigRef?
         var result = CGBeginDisplayConfiguration(&config)
         guard result == .success, let config = config else {
@@ -453,7 +456,7 @@ final class DisplayManager: DisplayManaging {
 
         for (displayID, mode) in configurations {
             guard
-                let modesArray = CGDisplayCopyAllDisplayModes(displayID, options)
+                let modesArray = CGDisplayCopyAllDisplayModes(displayID, nil)
                     as? [CGDisplayMode]
             else {
                 CGCancelDisplayConfiguration(config)
