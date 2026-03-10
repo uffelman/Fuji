@@ -148,7 +148,7 @@ private struct WelcomePage: View {
                 Text("Welcome to Fuji")
                     .font(.system(size: 22, weight: .bold))
 
-                Text("Instantly switch between display resolutions from your menu bar.")
+                Text("Step through resolutions in an instant — or jump to a saved preset — without leaving your workflow.")
                     .font(.system(size: 13.5))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -157,31 +157,89 @@ private struct WelcomePage: View {
             .padding(.top, 36)
             .padding(.horizontal, 40)
 
+            // Resolution stepping shortcut showcase
+            VStack(spacing: 8) {
+                Text("Built-in global shortcuts")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                    .textCase(.uppercase)
+                    .tracking(0.5)
+
+                HStack(spacing: 16) {
+                    ShortcutCallout(keys: ["⌃", "⌥", "↑"], label: "Increase Resolution")
+                    ShortcutCallout(keys: ["⌃", "⌥", "↓"], label: "Decrease Resolution")
+                }
+            }
+            .padding(.horizontal, 36)
+            .padding(.top, 22)
+
             // Feature list
             VStack(alignment: .leading, spacing: 14) {
-                FeatureRow(
-                    icon: "rectangle.stack.fill",
-                    color: .blue,
-                    title: "Resolution Presets",
-                    description: "Save and name your favourite display configurations for one-click switching."
-                )
-                FeatureRow(
-                    icon: "keyboard",
-                    color: .purple,
-                    title: "Global Keyboard Shortcuts",
-                    description: "Assign hotkeys to presets so you can change resolution without touching the mouse."
-                )
                 FeatureRow(
                     icon: "menubar.rectangle",
                     color: .green,
                     title: "Lives in Your Menu Bar",
-                    description: "Fuji stays out of your way — always available from the menu bar, never cluttering your Dock."
+                    description: "Fuji stays out of your way — no Dock icon, no main window, always one click away."
+                )
+                FeatureRow(
+                    icon: "rectangle.stack.fill",
+                    color: .blue,
+                    title: "Named Resolution Presets",
+                    description: "Save your go-to display configurations and switch between them in one click from the menu bar."
+                )
+                FeatureRow(
+                    icon: "keyboard",
+                    color: .purple,
+                    title: "Hotkeys for Presets Too",
+                    description: "Assign custom global shortcuts to any named preset so you can jump to a specific configuration without touching the mouse."
                 )
             }
             .padding(.horizontal, 36)
-            .padding(.top, 24)
+            .padding(.top, 20)
             .padding(.bottom, 28)
         }
+    }
+}
+
+// MARK: - Shortcut callout badge
+
+/// Displays a keyboard shortcut as a row of key caps with a label beneath.
+private struct ShortcutCallout: View {
+    let keys: [String]
+    let label: String
+
+    var body: some View {
+        VStack(spacing: 6) {
+            HStack(spacing: 4) {
+                ForEach(keys, id: \.self) { key in
+                    Text(key)
+                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .foregroundStyle(.primary)
+                        .frame(minWidth: 24, minHeight: 24)
+                        .padding(.horizontal, 6)
+                        .background(
+                            RoundedRectangle(cornerRadius: 6)
+                                .fill(Color(nsColor: .controlBackgroundColor))
+                                .shadow(color: .black.opacity(0.12), radius: 0, x: 0, y: 1)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 6)
+                                        .strokeBorder(Color(nsColor: .separatorColor), lineWidth: 1)
+                                )
+                        )
+                }
+            }
+            Text(label)
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 12)
+        .background(Color.accentColor.opacity(0.06))
+        .clipShape(.rect(cornerRadius: 10))
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .strokeBorder(Color.accentColor.opacity(0.2), lineWidth: 1)
+        )
     }
 }
 
@@ -208,7 +266,7 @@ private struct PermissionsPage: View {
                 Text("Accessibility Permission")
                     .font(.system(size: 22, weight: .bold))
 
-                Text("Global keyboard shortcuts need **Accessibility** access so Fuji can respond to hotkeys even when another app is in focus.")
+                Text("Fuji's shortcuts — including **⌃⌥↑** and **⌃⌥↓** — need **Accessibility** access to work system-wide, even when another app is in focus.")
                     .font(.system(size: 13.5))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
