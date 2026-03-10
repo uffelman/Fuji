@@ -19,8 +19,8 @@ struct ResolutionPreset: Codable, Identifiable {
     var configurations: [DisplayConfiguration]
     var keyboardShortcut: KeyboardShortcut?
 
-    init(name: String, configurations: [DisplayConfiguration], keyboardShortcut: KeyboardShortcut? = nil) {
-        self.id = UUID()
+    init(id: UUID, name: String, configurations: [DisplayConfiguration], keyboardShortcut: KeyboardShortcut? = nil) {
+        self.id = id
         self.name = name
         self.configurations = configurations
         self.keyboardShortcut = keyboardShortcut

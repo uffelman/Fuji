@@ -205,16 +205,11 @@ struct PresetEditorSheet: View {
         }
 
         let newPreset = ResolutionPreset(
+            id: preset?.id ?? UUID(),
             name: name,
             configurations: configurations,
             keyboardShortcut: keyboardShortcut
         )
-
-        // When editing, remove the old record before handing the updated preset
-        // to the caller — the caller's onSave handler re-inserts it.
-        if let existingPreset = preset {
-            settingsManager.deletePreset(existingPreset)
-        }
 
         onSave?(newPreset)
         dismiss()
