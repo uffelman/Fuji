@@ -57,18 +57,20 @@ jobs:
           set -euo pipefail
           CERT_PATH="$RUNNER_TEMP/developer-id.p12"
           KEYCHAIN_PATH="$RUNNER_TEMP/build.keychain-db"
-          LOGIN_KEYCHAIN_PATH="$(security login-keychain | tr -d '"')"
           KEYCHAIN_PASSWORD="$(openssl rand -base64 24)"
 
+          # Snapshot the full keychain search list so cleanup can restore it exactly.
+          ORIGINAL_KEYCHAINS="$(security list-keychains -d user | tr -d '"' | xargs)"
+
           echo "CI_KEYCHAIN_PATH=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
-          echo "CI_LOGIN_KEYCHAIN_PATH=$LOGIN_KEYCHAIN_PATH" >> "$GITHUB_ENV"
+          echo "CI_ORIGINAL_KEYCHAINS=$ORIGINAL_KEYCHAINS" >> "$GITHUB_ENV"
 
           echo "$DEVELOPER_ID_APP_P12_BASE64" | base64 --decode > "$CERT_PATH"
 
           security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-          security list-keychains -d user -s "$KEYCHAIN_PATH" "$LOGIN_KEYCHAIN_PATH"
+          security list-keychains -d user -s "$KEYCHAIN_PATH" $ORIGINAL_KEYCHAINS
 
           security import "$CERT_PATH" \
             -k "$KEYCHAIN_PATH" \
@@ -385,9 +387,8 @@ jobs:
         if: ${{ always() }}
         run: |
           set -euo pipefail
-          if [[ -n "${CI_LOGIN_KEYCHAIN_PATH:-}" ]]; then
-            security list-keychains -d user -s "$CI_LOGIN_KEYCHAIN_PATH" || true
-            security default-keychain -d user -s "$CI_LOGIN_KEYCHAIN_PATH" || true
+          if [[ -n "${CI_ORIGINAL_KEYCHAINS:-}" ]]; then
+            security list-keychains -d user -s $CI_ORIGINAL_KEYCHAINS || true
           fi
           if [[ -n "${CI_KEYCHAIN_PATH:-}" ]]; then
             security delete-keychain "$CI_KEYCHAIN_PATH" || true
