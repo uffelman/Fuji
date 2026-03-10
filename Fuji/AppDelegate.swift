@@ -28,7 +28,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         displayManager: container.displayManager,
         resolutionOverlayController: resolutionOverlayController,
         settingsManager: container.settingsManager,
-        updaterManager: container.updaterManager
+        updaterManager: updaterManager
     )
     private lazy var onboardingWindowController = OnboardingWindowController(
         permissions: container.permissionsManager
@@ -36,6 +36,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private lazy var resolutionOverlayController = ResolutionOverlayController(
         settingsManager: container.settingsManager
     )
+    private lazy var updaterManager = UpdaterManager()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         guard !ProcessInfo.processInfo.isSwiftUIPreview else { return }

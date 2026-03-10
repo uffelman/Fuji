@@ -12,5 +12,4 @@ final class Container {
     let displayManager = DisplayManager()
     let settingsManager = SettingsManager()
     let permissionsManager = PermissionsManager()
-    let updaterManager = UpdaterManager()
 }

@@ -189,4 +189,8 @@ struct PresetRow: View {
         onPresetsChanged: nil
     )
     .environment(SettingsManager(defaults: .preview))
+    .frame(
+        width: SettingsViewMetrics.size.width,
+        height: SettingsViewMetrics.size.height
+    )
 }

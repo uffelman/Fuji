@@ -116,4 +116,8 @@ private struct AboutMetaItem: View {
 
 #Preview {
     AboutSettingsTab()
+        .frame(
+            width: SettingsViewMetrics.size.width,
+            height: SettingsViewMetrics.size.height
+        )
 }
