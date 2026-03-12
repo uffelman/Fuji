@@ -153,7 +153,7 @@ struct GeneralSettingsTab: View {
 
 /// A reusable form row with a leading text label and a trailing control.
 private struct SettingsFormRow: View {
-    let label: String
+    let label: LocalizedStringKey
     @Binding var isOn: Bool
 
     var body: some View {
@@ -176,7 +176,7 @@ private struct SettingsFormRow: View {
 /// Shows the current shortcut (or default), a reset button when custom, and a Record/Cancel toggle.
 /// Mirrors the shortcut recording pattern from ``PresetEditorSheet``.
 private struct IncrementShortcutRow: View {
-    let label: String
+    let label: LocalizedStringKey
     let shortcut: KeyboardShortcut?
     let defaultShortcut: KeyboardShortcut
     @Binding var isRecording: Bool

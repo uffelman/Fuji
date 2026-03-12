@@ -206,7 +206,7 @@ private struct WelcomePage: View {
 /// Displays a keyboard shortcut as a row of key caps with a label beneath.
 private struct ShortcutCallout: View {
     let keys: [String]
-    let label: String
+    let label: LocalizedStringKey
 
     var body: some View {
         VStack(spacing: 6) {
@@ -320,8 +320,8 @@ private struct PermissionsPage: View {
 private struct FeatureRow: View {
     let icon: String
     let color: Color
-    let title: String
-    let description: String
+    let title: LocalizedStringKey
+    let description: LocalizedStringKey
 
     var body: some View {
         HStack(alignment: .top, spacing: 14) {

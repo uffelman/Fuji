@@ -32,7 +32,7 @@ struct AboutSettingsTab: View {
                         .padding(.bottom, 4)
 
                     // Version + build
-                    Text("Version \(Bundle.main.appVersion) (Build \(Bundle.main.buildNumber))")
+                    Text("Version \(Bundle.main.appVersion)")
                         .font(.system(size: 12))
                         .foregroundStyle(.secondary)
                         .padding(.bottom, 10)
@@ -100,7 +100,7 @@ struct AboutSettingsTab: View {
 
 /// A single metadata item for the About tab's info grid.
 private struct AboutMetaItem: View {
-    let label: String
+    let label: LocalizedStringKey
     let value: String
 
     var body: some View {

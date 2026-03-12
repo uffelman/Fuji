@@ -27,7 +27,7 @@ import SwiftUI
 /// PillButton("Allow Access…", systemImage: "lock.open.fill", style: .accent) { requestAccess() }
 /// ```
 struct PillButton: View {
-    let title: String
+    let title: LocalizedStringKey
     let systemImage: String?
     let style: PillButtonStyle
     private let destination: URL?
@@ -36,7 +36,7 @@ struct PillButton: View {
     @State private var isHovered = false
 
     /// Creates a pill button that opens a URL.
-    init(_ title: String, systemImage: String? = nil, style: PillButtonStyle = .accent, url: String) {
+    init(_ title: LocalizedStringKey, systemImage: String? = nil, style: PillButtonStyle = .accent, url: String) {
         self.title = title
         self.systemImage = systemImage
         self.style = style
@@ -45,7 +45,7 @@ struct PillButton: View {
     }
 
     /// Creates a pill button that performs an action.
-    init(_ title: String, systemImage: String? = nil, style: PillButtonStyle = .accent, action: @escaping () -> Void) {
+    init(_ title: LocalizedStringKey, systemImage: String? = nil, style: PillButtonStyle = .accent, action: @escaping () -> Void) {
         self.title = title
         self.systemImage = systemImage
         self.style = style

@@ -110,7 +110,7 @@ private struct SettingsTabButton: View {
 private enum SettingsTab: Int, CaseIterable {
     case presets, general, about
 
-    var title: String {
+    var title: LocalizedStringKey {
         switch self {
         case .presets: "Presets"
         case .general: "General"
@@ -176,7 +176,7 @@ struct PresetRow: View {
     /// Generates a comma-separated summary of the preset's display configurations.
     private var configurationSummary: String {
         let details = preset.configurations.map { config in
-            let hiDPI = config.mode.isHiDPI ? "HiDPI" : "Standard"
+            let hiDPI = config.mode.isHiDPI ? "HiDPI" : String(localized: "Standard", comment: "Non-HiDPI resolution mode")
             return "\(hiDPI) · \(config.mode.shortDisplayString)"
         }
         return details.joined(separator: ", ")

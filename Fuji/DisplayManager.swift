@@ -287,10 +287,10 @@ final class DisplayManager: DisplayManaging {
 
         // Fallback to built-in check
         if CGDisplayIsBuiltin(displayID) != 0 {
-            return "Built-in Display"
+            return String(localized: "Built-in Display")
         }
 
-        return "Display \(displayID)"
+        return String(localized: "Display \(displayID)")
     }
 
     /// Retrieves all available display modes for a given display.

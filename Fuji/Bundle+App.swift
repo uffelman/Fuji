@@ -22,19 +22,15 @@ extension Bundle {
     var appVersion: String {
         infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
     }
-
-    var buildNumber: String {
-        infoDictionary?["CFBundleVersion"] as? String ?? "1"
-    }
     
     var minimumOSVersion: String {
         if let minVersion = infoDictionary?["LSMinimumSystemVersion"] as? String {
-            return "\(minVersion)+ Required"
+            return String(localized: "\(minVersion)+ Required", comment: "Minimum macOS version, e.g. '26.0+ Required'")
         }
         // Fallback to compile-time minimum deployment target
         if #available(macOS 26.0, *) {
-            return "26.0+ Required"
+            return String(localized: "26.0+ Required", comment: "Fallback minimum macOS version")
         }
-        return "Unknown"
+        return String(localized: "Unknown", comment: "Unknown minimum OS version")
     }
 }

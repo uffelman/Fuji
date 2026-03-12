@@ -34,6 +34,10 @@ fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output
 
+# Profiling
+*.profraw
+*.profdata
+
 # Archives
 *.xcarchive
 

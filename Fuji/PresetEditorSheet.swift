@@ -223,9 +223,9 @@ struct PresetEditorSheet: View {
 /// Renders 10.5pt semibold small-caps text in the secondary foreground color,
 /// matching the metadata labels in ``AboutSettingsTab`` and form headers in ``GeneralSettingsTab``.
 private struct SectionLabel: View {
-    let text: String
+    let text: LocalizedStringKey
 
-    init(_ text: String) {
+    init(_ text: LocalizedStringKey) {
         self.text = text
     }
 
@@ -294,7 +294,7 @@ private struct DisplayModeSelector: View {
                 }
             } label: {
                 HStack(spacing: 8) {
-                    Text(selectedMode?.displayString ?? "Select resolution...")
+                    Text(selectedMode?.displayString ?? String(localized: "Select resolution..."))
                         .font(.system(size: 13))
                         .foregroundStyle(selectedMode == nil ? .tertiary : .primary)
                     Spacer()
