@@ -2532,7 +2532,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Clicca \"Aggiungi Preset\" qui sotto per creare un nuovo preset"
+            "value": "Clicca su \"Aggiungi Preset\" qui sotto per creare un nuovo preset"
           }
         },
         "ko": {
@@ -2687,7 +2687,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Clicca **Apri Impostazioni di Sistema** qui sotto."
+            "value": "Clicca su **Apri Impostazioni di Sistema** qui sotto."
           }
         },
         "ko": {
@@ -8563,7 +8563,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Abrir con el inicio de sesión"
+            "value": "Abrir al iniciar sesión"
           }
         },
         "fr": {
@@ -8587,7 +8587,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Iniciar no Login"
+            "value": "Iniciar ao fazer login"
           }
         },
         "it": {
@@ -9374,7 +9374,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ripristina Predefinito"
+            "value": "Ripristina valori predefiniti"
           }
         },
         "ko": {
@@ -12319,7 +12319,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ripristina predefinito"
+            "value": "Ripristina valori predefiniti"
           }
         },
         "ko": {
