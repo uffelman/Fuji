@@ -50,7 +50,7 @@ final class MenuBarController: NSObject, NSMenuDelegate {
 
         if let button = statusItem.button {
             button.image = NSImage(
-                systemSymbolName: "display", accessibilityDescription: String(localized: "Display Resolution"))
+                systemSymbolName: "display", accessibilityDescription: String(localized: .menuStatusDisplayResolution))
             button.image?.isTemplate = true
         }
 
@@ -82,7 +82,7 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         if !presets.isEmpty {
             menu.addItem(NSMenuItem.separator())
 
-            let presetsTitle = String(localized: "Presets", comment: "Menu section header")
+            let presetsTitle = String(localized: .menuSectionPresets)
             let presetsHeader = NSMenuItem(title: presetsTitle, action: nil, keyEquivalent: "")
             presetsHeader.isEnabled = false
             presetsHeader.attributedTitle = NSAttributedString(
@@ -101,7 +101,7 @@ final class MenuBarController: NSObject, NSMenuDelegate {
                 presetItem.representedObject = preset
 
                 if let shortcut = preset.keyboardShortcut {
-                    presetItem.toolTip = String(localized: "Shortcut: \(shortcut.displayString)")
+                    presetItem.toolTip = String(localized: .menuShortcutTooltip(shortcut.displayString))
                 }
 
                 // Show ratio badges for each configuration's resolution
@@ -119,7 +119,7 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         menu.addItem(NSMenuItem.separator())
 
         // Increment/Decrement resolution items
-        let increaseTitle = String(localized: "Increase Resolution")
+        let increaseTitle = String(localized: .menuIncreaseResolution)
         let increaseItem = NSMenuItem(
             title: increaseTitle,
             action: #selector(increaseResolution),
@@ -135,7 +135,7 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         self.increaseResolutionItem = increaseItem
         menu.addItem(increaseItem)
 
-        let decreaseTitle = String(localized: "Decrease Resolution")
+        let decreaseTitle = String(localized: .menuDecreaseResolution)
         let decreaseItem = NSMenuItem(
             title: decreaseTitle,
             action: #selector(decreaseResolution),
@@ -155,19 +155,19 @@ final class MenuBarController: NSObject, NSMenuDelegate {
 
         // Refresh option
         let refreshItem = NSMenuItem(
-            title: String(localized: "Refresh Displays"), action: #selector(refreshDisplays), keyEquivalent: "r")
+            title: String(localized: .menuRefreshDisplays), action: #selector(refreshDisplays), keyEquivalent: "r")
         refreshItem.target = self
         menu.addItem(refreshItem)
 
         // Settings
         let settingsItem = NSMenuItem(
-            title: String(localized: "Settings..."), action: #selector(openSettings), keyEquivalent: ",")
+            title: String(localized: .menuSettings), action: #selector(openSettings), keyEquivalent: ",")
         settingsItem.target = self
         menu.addItem(settingsItem)
 
         // Check for Updates
         let updateItem = NSMenuItem(
-            title: String(localized: "Check for Updates..."),
+            title: String(localized: .menuCheckForUpdates),
             action: #selector(SPUStandardUpdaterController.checkForUpdates(_:)),
             keyEquivalent: ""
         )
@@ -178,7 +178,7 @@ final class MenuBarController: NSObject, NSMenuDelegate {
 
         // Quit
         let quitItem = NSMenuItem(
-            title: String(localized: "Quit Fuji"), action: #selector(quitApp), keyEquivalent: "q")
+            title: String(localized: .menuQuit), action: #selector(quitApp), keyEquivalent: "q")
         quitItem.target = self
         menu.addItem(quitItem)
     }
@@ -201,7 +201,7 @@ final class MenuBarController: NSObject, NSMenuDelegate {
 
         // Current resolution info
         if let currentMode = display.currentMode {
-            let currentLabel = String(localized: "Current: \(currentMode.displayString)")
+            let currentLabel = String(localized: .menuCurrentPrefix(currentMode.displayString))
             let currentItem = NSMenuItem(
                 title: "  \(currentLabel)",
                 action: nil,
@@ -220,7 +220,7 @@ final class MenuBarController: NSObject, NSMenuDelegate {
 
         // Submenu for all resolutions
         let resolutionsItem = NSMenuItem(
-            title: "  \(String(localized: "Change Resolution"))", action: nil, keyEquivalent: "")
+            title: "  \(String(localized: .menuChangeResolution))", action: nil, keyEquivalent: "")
         let resolutionsSubmenu = NSMenu()
 
         // Group modes by resolution dimensions
@@ -259,7 +259,7 @@ final class MenuBarController: NSObject, NSMenuDelegate {
                 // Check if any mode in this group is the default
                 let containsDefault = modes.contains { display.isDefaultMode($0) }
                 let resLabel = resolution.label
-                let defaultSuffix = String(localized: "Default", comment: "Suffix for default resolution")
+                let defaultSuffix = String(localized: .menuDefaultSuffix)
                 let resTitle = containsDefault ? "\(resLabel) - \(defaultSuffix)" : resLabel
 
                 let resItem = NSMenuItem(title: resTitle, action: nil, keyEquivalent: "")
@@ -290,7 +290,7 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         // Reset to default for this display
         if display.defaultMode != nil {
             let resetItem = NSMenuItem(
-                title: "  \(String(localized: "menu-reset-to-default", defaultValue: "Reset to Default"))", action: #selector(resetDisplayToDefault(_:)),
+            title: "  \(String(localized: .generalResetToDefault))", action: #selector(resetDisplayToDefault(_:)),
                 keyEquivalent: "")
             resetItem.target = self
             resetItem.representedObject = display.id
@@ -324,7 +324,7 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         // Add "Default" label if this is the default mode for the display
         let isDefault = display.isDefaultMode(mode)
         if isDefault {
-            title += " - \(String(localized: "Default", comment: "Suffix for default resolution"))"
+            title += " - \(String(localized: .menuDefaultSuffix))"
         }
 
         let item = NSMenuItem(
@@ -375,8 +375,8 @@ final class MenuBarController: NSObject, NSMenuDelegate {
                 }
             } else {
                 showAlert(
-                    title: String(localized: "Failed to Change Resolution"),
-                    message: String(localized: "Could not change the display resolution. The selected mode may not be supported.")
+                    title: String(localized: .menuFailedChangeResolutionTitle),
+                    message: String(localized: .menuFailedChangeResolutionMessage)
                 )
             }
         }
@@ -397,8 +397,8 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         // Use smart display matching from extension
         guard let configurations = preset.matchConfigurations(to: displayManager) else {
             showAlert(
-                title: String(localized: "Displays Not Found"),
-                message: String(localized: "Could not apply preset '\(preset.name)' — none of the configured displays are currently connected.")
+                title: String(localized: .menuDisplaysNotFoundTitle),
+                message: String(localized: .menuDisplaysNotFoundMessage(preset.name))
             )
             return
         }
@@ -424,8 +424,8 @@ final class MenuBarController: NSObject, NSMenuDelegate {
                 )
             } else {
                 showAlert(
-                    title: String(localized: "Failed to Apply Preset"),
-                    message: String(localized: "Could not apply the preset '\(preset.name)'. Some display modes may not be available.")
+                    title: String(localized: .menuFailedApplyPresetTitle),
+                    message: String(localized: .menuFailedApplyPresetMessage(preset.name))
                 )
             }
         }
@@ -457,8 +457,8 @@ final class MenuBarController: NSObject, NSMenuDelegate {
             }
         } else {
             showAlert(
-                title: String(localized: "Failed to Reset Display"),
-                message: String(localized: "Could not reset the display to its default resolution.")
+                title: String(localized: .menuFailedResetDisplayTitle),
+                message: String(localized: .menuFailedResetDisplayMessage)
             )
         }
     }
@@ -482,7 +482,7 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         )
 
         let settingsWindow = NSWindow(contentViewController: hostingController)
-        settingsWindow.title = String(localized: "Fuji Settings")
+        settingsWindow.title = String(localized: .menuSettingsWindowTitle)
         settingsWindow.styleMask = [.titled, .closable, .miniaturizable]
         settingsWindow.setContentSize(contentSize)
         settingsWindow.minSize = contentSize
@@ -654,7 +654,7 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         alert.messageText = title
         alert.informativeText = message
         alert.alertStyle = .warning
-        alert.addButton(withTitle: String(localized: "OK"))
+        alert.addButton(withTitle: String(localized: .menuOK))
         alert.runModal()
     }
 }

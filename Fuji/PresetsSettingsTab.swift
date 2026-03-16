@@ -24,12 +24,10 @@ struct PresetsSettingsTab<DM: DisplayManaging>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
-                Text("Resolution Presets")
+                Text(.presetsTitle)
                     .font(.system(size: 15, weight: .semibold))
 
-                Text(
-                    "Quick-switch between display configurations using keyboard shortcuts."
-                )
+                Text(.presetsSubtitle)
                 .font(.system(size: 12))
                 .foregroundStyle(.secondary)
             }
@@ -46,9 +44,9 @@ struct PresetsSettingsTab<DM: DisplayManaging>: View {
                         Image(systemName: "rectangle.stack.badge.plus")
                             .font(.largeTitle)
                             .foregroundStyle(.secondary)
-                        Text("No presets configured")
+                        Text(.presetsEmptyTitle)
                             .font(.headline)
-                        Text("Click \"Add Preset\" below to create a new preset")
+                        Text(.presetsEmptyDescription)
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
@@ -78,7 +76,7 @@ struct PresetsSettingsTab<DM: DisplayManaging>: View {
             }
             .scrollBounceBehavior(.basedOnSize)
             
-            PillButton("Add Preset", style: .monochrome) {
+            PillButton(.presetsAddButton, style: .monochrome) {
                 showingAddPreset = true
             }
         }
@@ -135,29 +133,31 @@ private struct AccessibilityPermissionWarning: View {
                 .foregroundStyle(.orange)
 
             VStack(alignment: .leading, spacing: 4) {
-                Text("Accessibility Permission Required")
+                Text(.presetsAccessibilityTitle)
                     .font(.subheadline)
                     .fontWeight(.medium)
-                Text(
-                    "Global keyboard shortcuts require Accessibility access in System Settings > Privacy & Security > Accessibility."
-                )
+                Text(.presetsAccessibilityBody)
                 .font(.caption)
                 .foregroundStyle(.secondary)
             }
 
             Spacer()
 
-            Button("Open Settings") {
+            Button {
                 if let url = URL(
                     string:
                         "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
                 ) {
                     NSWorkspace.shared.open(url)
                 }
+            } label: {
+                Text(.presetsOpenSettings)
             }
 
-            Button("Recheck") {
+            Button {
                 onRecheck()
+            } label: {
+                Text(.presetsRecheck)
             }
         }
         .padding(12)

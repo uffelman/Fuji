@@ -18,16 +18,16 @@ import SwiftUI
 ///
 /// ```swift
 /// // Link variant (accent)
-/// PillButton("Source Code", style: .accent, url: "https://github.com/...")
+/// PillButton(.aboutSourceCode, style: .accent, url: "https://github.com/...")
 ///
 /// // Action variant (monochrome)
-/// PillButton("Record Shortcut", style: .monochrome) { startRecording() }
+/// PillButton(.presetEditorRecordShortcut, style: .monochrome) { startRecording() }
 ///
 /// // With a leading SF Symbol
-/// PillButton("Allow Access…", systemImage: "lock.open.fill", style: .accent) { requestAccess() }
+/// PillButton(.onboardingAllowAccess, systemImage: "lock.open.fill", style: .accent) { requestAccess() }
 /// ```
 struct PillButton: View {
-    let title: LocalizedStringKey
+    let title: LocalizedStringResource
     let systemImage: String?
     let style: PillButtonStyle
     private let destination: URL?
@@ -36,7 +36,7 @@ struct PillButton: View {
     @State private var isHovered = false
 
     /// Creates a pill button that opens a URL.
-    init(_ title: LocalizedStringKey, systemImage: String? = nil, style: PillButtonStyle = .accent, url: String) {
+    init(_ title: LocalizedStringResource, systemImage: String? = nil, style: PillButtonStyle = .accent, url: String) {
         self.title = title
         self.systemImage = systemImage
         self.style = style
@@ -45,7 +45,7 @@ struct PillButton: View {
     }
 
     /// Creates a pill button that performs an action.
-    init(_ title: LocalizedStringKey, systemImage: String? = nil, style: PillButtonStyle = .accent, action: @escaping () -> Void) {
+    init(_ title: LocalizedStringResource, systemImage: String? = nil, style: PillButtonStyle = .accent, action: @escaping () -> Void) {
         self.title = title
         self.systemImage = systemImage
         self.style = style
@@ -93,7 +93,11 @@ struct PillButton: View {
     private var label: some View {
         Group {
             if let systemImage {
-                Label(title, systemImage: systemImage)
+                Label {
+                    Text(title)
+                } icon: {
+                    Image(systemName: systemImage)
+                }
             } else {
                 Text(title)
             }
@@ -120,8 +124,8 @@ struct PillButton: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
             HStack(spacing: 10) {
-                PillButton("Source Code", style: .accent, url: "https://github.com/uffelman/Fuji")
-                PillButton("Developer Website", style: .accent, url: "https://stephenu.com")
+                PillButton(.aboutSourceCode, style: .accent, url: "https://github.com/uffelman/Fuji")
+                PillButton(.aboutDeveloperWebsite, style: .accent, url: "https://stephenu.com")
             }
         }
 
@@ -132,8 +136,8 @@ struct PillButton: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
             HStack(spacing: 10) {
-                PillButton("Record Shortcut", style: .monochrome) {}
-                PillButton("Cancel", style: .monochrome) {}
+                PillButton(.presetEditorRecordShortcut, style: .monochrome) {}
+                PillButton(.presetEditorCancel, style: .monochrome) {}
             }
         }
 
@@ -144,8 +148,8 @@ struct PillButton: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
             HStack(spacing: 10) {
-                PillButton("Allow Access…", systemImage: "lock.open.fill", style: .accent) {}
-                PillButton("Open Settings", systemImage: "gear", style: .monochrome) {}
+                PillButton(.onboardingAllowAccess, systemImage: "lock.open.fill", style: .accent) {}
+                PillButton(.onboardingOpenSystemSettings, systemImage: "gear", style: .monochrome) {}
             }
         }
     }

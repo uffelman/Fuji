@@ -33,13 +33,13 @@ struct PresetEditorSheet: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             // Sheet title
-            Text(preset == nil ? "New Preset" : "Edit Preset")
+            Text(preset == nil ? .presetEditorNewTitle : .presetEditorEditTitle)
                 .font(.system(size: 17, weight: .semibold))
 
             // Preset Name
             VStack(alignment: .leading, spacing: 6) {
-                SectionLabel("Preset Name")
-                TextField("Enter preset name", text: $name)
+                SectionLabel(.presetEditorNameLabel)
+                TextField(String(localized: .presetEditorNamePlaceholder), text: $name)
                     .textFieldStyle(.roundedBorder)
                     .font(.system(size: 13.5))
                     .onChange(of: name) { _, _ in
@@ -49,7 +49,7 @@ struct PresetEditorSheet: View {
 
             // Display Resolutions
             VStack(alignment: .leading, spacing: 6) {
-                SectionLabel("Display Resolutions")
+                SectionLabel(.presetEditorDisplayResolutions)
 
                 VStack(spacing: 8) {
                     ScrollView {
@@ -71,11 +71,11 @@ struct PresetEditorSheet: View {
 
             // Keyboard Shortcut
             VStack(alignment: .leading, spacing: 6) {
-                SectionLabel("Keyboard Shortcut (Optional)")
+                SectionLabel(.presetEditorKeyboardShortcut)
 
                 HStack(spacing: 10) {
                     if isRecordingShortcut {
-                        Text("Press a key combination...")
+                        Text(.presetEditorPressKeyCombo)
                             .font(.system(size: 12))
                             .foregroundStyle(Color.accentColor.opacity(0.7))
                             .padding(.horizontal, 12)
@@ -102,13 +102,13 @@ struct PresetEditorSheet: View {
                         Button {
                             keyboardShortcut = nil
                         } label: {
-                            Text("× Clear")
+                            Text(.presetEditorClearShortcut)
                                 .font(.system(size: 12))
                                 .foregroundStyle(.tertiary)
                         }
                         .buttonStyle(.plain)
                     } else {
-                        Text("No shortcut set")
+                        Text(.presetEditorNoShortcut)
                             .font(.system(size: 13))
                             .foregroundStyle(.tertiary)
                     }
@@ -116,7 +116,7 @@ struct PresetEditorSheet: View {
                     Spacer()
 
                     PillButton(
-                        isRecordingShortcut ? "Cancel" : "Record Shortcut",
+                        isRecordingShortcut ? .presetEditorCancel : .presetEditorRecordShortcut,
                         style: .monochrome
                     ) {
                         if isRecordingShortcut {
@@ -143,12 +143,12 @@ struct PresetEditorSheet: View {
             HStack {
                 Spacer()
 
-                PillButton("Cancel", style: .monochrome) {
+                PillButton(.presetEditorCancel, style: .monochrome) {
                     dismiss()
                 }
                 .keyboardShortcut(.cancelAction)
 
-                PillButton("Save", style: .accent) {
+                PillButton(.presetEditorSave, style: .accent) {
                     savePreset()
                 }
                 .keyboardShortcut(.defaultAction)
@@ -223,9 +223,9 @@ struct PresetEditorSheet: View {
 /// Renders 10.5pt semibold small-caps text in the secondary foreground color,
 /// matching the metadata labels in ``AboutSettingsTab`` and form headers in ``GeneralSettingsTab``.
 private struct SectionLabel: View {
-    let text: LocalizedStringKey
+    let text: LocalizedStringResource
 
-    init(_ text: LocalizedStringKey) {
+    init(_ text: LocalizedStringResource) {
         self.text = text
     }
 
@@ -260,7 +260,7 @@ private struct DisplayModeSelector: View {
                     .font(.system(size: 13.5, weight: .medium))
 
                 if display.isMain {
-                    Text("Main")
+                    Text(.presetEditorMainBadge)
                         .font(.system(size: 10.5, weight: .semibold))
                         .foregroundStyle(Color.accentColor)
                         .padding(.horizontal, 8)
@@ -294,7 +294,7 @@ private struct DisplayModeSelector: View {
                 }
             } label: {
                 HStack(spacing: 8) {
-                    Text(selectedMode?.displayString ?? String(localized: "Select resolution..."))
+                    Text(selectedMode?.displayString ?? String(localized: .presetEditorSelectResolution))
                         .font(.system(size: 13))
                         .foregroundStyle(selectedMode == nil ? .tertiary : .primary)
                     Spacer()

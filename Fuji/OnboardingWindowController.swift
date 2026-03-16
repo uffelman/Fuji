@@ -43,7 +43,7 @@ final class OnboardingWindowController: NSObject, NSWindowDelegate {
 
     private func makeWindow(startOnPage: Int) -> NSWindow {
         let win = NSWindow()
-        win.title = String(localized: "Welcome to Fuji")
+        win.title = String(localized: .onboardingWelcomeTitle)
         win.styleMask = [.titled, .closable, .fullSizeContentView]
         win.titlebarAppearsTransparent = false
         win.isMovableByWindowBackground = true

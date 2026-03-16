@@ -33,8 +33,10 @@ struct DisplayMode: Identifiable, Hashable, Codable {
     /// Includes resolution, refresh rate, and HiDPI status.
     /// Example: "1920 × 1080 @ 60Hz (HiDPI)"
     var displayString: String {
-        let hiDPILabel = isHiDPI ? " (HiDPI)" : ""
-        let refreshString = refreshRate > 0 ? " @ \(Int(refreshRate))Hz" : ""
+        let hiDPILabel = isHiDPI ? String(localized: .displayModeHiDPISuffix) : ""
+        let refreshString = refreshRate > 0
+            ? String(localized: .displayModeRefreshSuffix(String(Int(refreshRate))))
+            : ""
         return "\(width) × \(height)\(refreshString)\(hiDPILabel)"
     }
 

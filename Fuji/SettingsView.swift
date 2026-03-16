@@ -110,11 +110,11 @@ private struct SettingsTabButton: View {
 private enum SettingsTab: Int, CaseIterable {
     case presets, general, about
 
-    var title: LocalizedStringKey {
+    var title: LocalizedStringResource {
         switch self {
-        case .presets: "Presets"
-        case .general: "General"
-        case .about: "About"
+        case .presets: .settingsTabPresets
+        case .general: .settingsTabGeneral
+        case .about: .settingsTabAbout
         }
     }
     
@@ -159,12 +159,24 @@ struct PresetRow: View {
                     .clipShape(.rect(cornerRadius: 5))
             }
 
-            Button("Edit", systemImage: "pencil", action: onEdit)
+            Button(action: onEdit) {
+                Label {
+                    Text(.presetRowEdit)
+                } icon: {
+                    Image(systemName: "pencil")
+                }
+            }
                 .buttonStyle(.plain)
                 .labelStyle(.iconOnly)
                 .foregroundStyle(.tertiary)
 
-            Button("Delete", systemImage: "trash", action: onDelete)
+            Button(action: onDelete) {
+                Label {
+                    Text(.presetRowDelete)
+                } icon: {
+                    Image(systemName: "trash")
+                }
+            }
                 .buttonStyle(.plain)
                 .labelStyle(.iconOnly)
                 .foregroundStyle(Color(.systemRed).opacity(0.7))
@@ -176,7 +188,9 @@ struct PresetRow: View {
     /// Generates a comma-separated summary of the preset's display configurations.
     private var configurationSummary: String {
         let details = preset.configurations.map { config in
-            let hiDPI = config.mode.isHiDPI ? "HiDPI" : String(localized: "Standard", comment: "Non-HiDPI resolution mode")
+            let hiDPI = config.mode.isHiDPI
+                ? String(localized: .displayModeHiDPI)
+                : String(localized: .displayModeStandard)
             return "\(hiDPI) · \(config.mode.shortDisplayString)"
         }
         return details.joined(separator: ", ")

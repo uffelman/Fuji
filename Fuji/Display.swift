@@ -27,10 +27,10 @@ struct Display: Identifiable, Hashable {
     var displayLabel: String {
         var label = name
         if isMain {
-            label += String(localized: "display-suffix-main", defaultValue: " (Main)", comment: "Suffix for the primary display")
+            label += String(localized: .displaySuffixMain)
         }
         if isBuiltIn {
-            label += String(localized: "display-suffix-builtin", defaultValue: " - Built-in", comment: "Suffix for the built-in display")
+            label += String(localized: .displaySuffixBuiltIn)
         }
         return label
     }

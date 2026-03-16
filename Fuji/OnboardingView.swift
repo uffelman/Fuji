@@ -101,18 +101,18 @@ struct OnboardingView: View {
                 Spacer()
 
                 if currentPage == 0 {
-                    PillButton("Continue", style: .accent) {
+                    PillButton(.onboardingContinue, style: .accent) {
                         currentPage = 1
                     }
                     .keyboardShortcut(.return, modifiers: [])
                 } else {
                     if hasPermission {
-                        PillButton("Done", style: .accent) {
+                        PillButton(.onboardingDone, style: .accent) {
                             onDismiss?()
                         }
                         .keyboardShortcut(.return, modifiers: [])
                     } else {
-                        PillButton("Skip for Now", style: .monochrome) {
+                        PillButton(.onboardingSkipForNow, style: .monochrome) {
                             onDismiss?()
                         }
                         .keyboardShortcut(.return, modifiers: [])
@@ -145,10 +145,10 @@ private struct WelcomePage: View {
                     .clipShape(.rect(cornerRadius: 18 / 80 * iconSize, style: .continuous))
                     .shadow(color: .accentColor.opacity(0.2), radius: 10, y: 4)
 
-                Text("Welcome to Fuji")
+                Text(.onboardingWelcomeTitle)
                     .font(.system(size: 22, weight: .bold))
 
-                Text("Step through resolutions in an instant — or jump to a saved preset — without leaving your workflow.")
+                Text(.onboardingWelcomeSubtitle)
                     .font(.system(size: 13.5))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -159,15 +159,15 @@ private struct WelcomePage: View {
 
             // Resolution stepping shortcut showcase
             VStack(spacing: 8) {
-                Text("Built-in global shortcuts")
+                Text(.onboardingShortcutsTitle)
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(.secondary)
                     .textCase(.uppercase)
                     .tracking(0.5)
 
                 HStack(spacing: 16) {
-                    ShortcutCallout(keys: ["⌃", "⌥", "↑"], label: "Increase Resolution")
-                    ShortcutCallout(keys: ["⌃", "⌥", "↓"], label: "Decrease Resolution")
+                    ShortcutCallout(keys: ["⌃", "⌥", "↑"], label: .onboardingIncreaseResolution)
+                    ShortcutCallout(keys: ["⌃", "⌥", "↓"], label: .onboardingDecreaseResolution)
                 }
             }
             .padding(.horizontal, 36)
@@ -178,20 +178,20 @@ private struct WelcomePage: View {
                 FeatureRow(
                     icon: "menubar.rectangle",
                     color: .green,
-                    title: "Lives in Your Menu Bar",
-                    description: "Fuji stays out of your way — no Dock icon, no main window, always one click away."
+                    title: .onboardingFeatureMenuBarTitle,
+                    description: .onboardingFeatureMenuBarDescription
                 )
                 FeatureRow(
                     icon: "rectangle.stack.fill",
                     color: .blue,
-                    title: "Named Resolution Presets",
-                    description: "Save your go-to display configurations and switch between them in one click from the menu bar."
+                    title: .onboardingFeaturePresetsTitle,
+                    description: .onboardingFeaturePresetsDescription
                 )
                 FeatureRow(
                     icon: "keyboard",
                     color: .purple,
-                    title: "Hotkeys for Presets Too",
-                    description: "Assign custom global shortcuts to any named preset so you can jump to a specific configuration without touching the mouse."
+                    title: .onboardingFeatureHotkeysTitle,
+                    description: .onboardingFeatureHotkeysDescription
                 )
             }
             .padding(.horizontal, 36)
@@ -206,7 +206,7 @@ private struct WelcomePage: View {
 /// Displays a keyboard shortcut as a row of key caps with a label beneath.
 private struct ShortcutCallout: View {
     let keys: [String]
-    let label: LocalizedStringKey
+    let label: LocalizedStringResource
 
     var body: some View {
         VStack(spacing: 6) {
@@ -263,10 +263,10 @@ private struct PermissionsPage: View {
                     .symbolRenderingMode(.hierarchical)
                     .animation(.easeInOut(duration: 0.3), value: hasPermission)
 
-                Text("Accessibility Permission")
+                Text(.onboardingPermissionsTitle)
                     .font(.system(size: 22, weight: .bold))
 
-                Text("Fuji's shortcuts — including **⌃⌥↑** and **⌃⌥↓** — need **Accessibility** access to work system-wide, even when another app is in focus.")
+                Text(.onboardingPermissionsBody)
                     .font(.system(size: 13.5))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -283,7 +283,7 @@ private struct PermissionsPage: View {
 
             if !hasPermission {
                 // Primary CTA — triggers the system permission prompt on demand.
-                PillButton("Allow Access…", systemImage: "lock.open.fill", style: .accent) {
+                PillButton(.onboardingAllowAccess, systemImage: "lock.open.fill", style: .accent) {
                     onWillRequestPermission?()
                     permissions.requestAccessibilityPermission()
                 }
@@ -292,20 +292,20 @@ private struct PermissionsPage: View {
                 // Fallback guide shown when the user needs to enable access manually
                 // (e.g. they dismissed the system prompt or it didn't appear).
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("Or grant access manually:")
+                    Text(.onboardingManualTitle)
                         .font(.system(size: 13, weight: .medium))
                         .padding(.bottom, 2)
 
-                    StepRow(number: 1, text: "Click **Open System Settings** below.")
-                    StepRow(number: 2, text: "Scroll to find **Fuji** in the list.")
-                    StepRow(number: 3, text: "Toggle the switch next to Fuji to **on**.")
-                    StepRow(number: 4, text: "Return here — permission status updates automatically.")
+                    StepRow(number: 1, text: .onboardingStep1)
+                    StepRow(number: 2, text: .onboardingStep2)
+                    StepRow(number: 3, text: .onboardingStep3)
+                    StepRow(number: 4, text: .onboardingStep4)
                 }
                 .padding(.horizontal, 36)
                 .padding(.top, 16)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                PillButton("Open System Settings", systemImage: "gear", style: .monochrome) {
+                PillButton(.onboardingOpenSystemSettings, systemImage: "gear", style: .monochrome) {
                     permissions.openAccessibilitySettings()
                 }
                 .padding(.top, 14)
@@ -320,8 +320,8 @@ private struct PermissionsPage: View {
 private struct FeatureRow: View {
     let icon: String
     let color: Color
-    let title: LocalizedStringKey
-    let description: LocalizedStringKey
+    let title: LocalizedStringResource
+    let description: LocalizedStringResource
 
     var body: some View {
         HStack(alignment: .top, spacing: 14) {
@@ -353,12 +353,11 @@ private struct PermissionStatusCard: View {
                 .foregroundStyle(hasPermission ? .green : .orange)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(hasPermission ? "Permission granted" : "Permission not granted")
+                Text(hasPermission ? .onboardingPermissionGrantedTitle : .onboardingPermissionNotGrantedTitle)
                     .font(.system(size: 13.5, weight: .medium))
-                Text(
-                    hasPermission
-                        ? "Global keyboard shortcuts are active and ready to use."
-                        : "Keyboard shortcuts will not work until this is enabled."
+                Text(hasPermission
+                    ? .onboardingPermissionGrantedBody
+                    : .onboardingPermissionNotGrantedBody
                 )
                 .font(.system(size: 12))
                 .foregroundStyle(.secondary)
@@ -383,7 +382,7 @@ private struct PermissionStatusCard: View {
 
 private struct StepRow: View {
     let number: Int
-    let text: LocalizedStringKey
+    let text: LocalizedStringResource
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {

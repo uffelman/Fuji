@@ -31,14 +31,14 @@ struct AboutSettingsTab: View {
                         .font(.system(size: 24, weight: .bold))
                         .padding(.bottom, 4)
 
-                    // Version + build
-                    Text("Version \(Bundle.main.appVersion)")
+                    // Version
+                    Text(.aboutVersion(Bundle.main.appVersion))
                         .font(.system(size: 12))
                         .foregroundStyle(.secondary)
                         .padding(.bottom, 10)
 
                     // Description
-                    Text("A lightweight menu bar utility for instantly \nswitching display resolutions on macOS.")
+                    Text(.aboutDescription)
                         .font(.system(size: 13))
                         .lineLimit(2)
                         .foregroundStyle(.secondary)
@@ -55,29 +55,29 @@ struct AboutSettingsTab: View {
             // Metadata grid
             Grid(alignment: .leading, horizontalSpacing: 24, verticalSpacing: 10) {
                 GridRow {
-                    AboutMetaItem(label: "Developer", value: "Stephen Uffelman")
-                    AboutMetaItem(label: "macOS", value: Bundle.main.minimumOSVersion)
-                    AboutMetaItem(label: "License", value: "AGPL v3")
+                    AboutMetaItem(label: .aboutMetaDeveloper, value: "Stephen Uffelman")
+                    AboutMetaItem(label: .aboutMetaMacOS, value: Bundle.main.minimumOSVersion)
+                    AboutMetaItem(label: .aboutMetaLicense, value: "AGPL v3")
                 }
             }
             .padding(.bottom, 20)
 
             // Link buttons
             HStack(spacing: 10) {
-                PillButton("Source Code", style: .accent, url: "https://github.com/uffelman/Fuji")
-                PillButton("Developer Website", style: .accent, url: "https://stephenu.com")
+                PillButton(.aboutSourceCode, style: .accent, url: "https://github.com/uffelman/Fuji")
+                PillButton(.aboutDeveloperWebsite, style: .accent, url: "https://stephenu.com")
             }
             .padding(.bottom, 20)
 
             // Tip jar
             VStack(spacing: 12) {
-                Text("\(Bundle.main.appName) is free and open source.\nIf you find it useful, consider leaving a tip! ❤️")
+                Text(.aboutTipJarText(Bundle.main.appName))
                     .font(.system(size: 14))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
 
-                PillButton("Support on Ko-fi", style: .accent, url: "https://ko-fi.com/stephenu")
+                PillButton(.aboutSupportKofi, style: .accent, url: "https://ko-fi.com/stephenu")
             }
             .padding(.vertical, 14)
             .padding(.horizontal, 20)
@@ -100,7 +100,7 @@ struct AboutSettingsTab: View {
 
 /// A single metadata item for the About tab's info grid.
 private struct AboutMetaItem: View {
-    let label: LocalizedStringKey
+    let label: LocalizedStringResource
     let value: String
 
     var body: some View {

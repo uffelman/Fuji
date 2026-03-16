@@ -32,40 +32,40 @@ struct GeneralSettingsTab: View {
 
         ScrollView {
             VStack(alignment: .leading, spacing: 12) {
-                Text("General")
+                Text(.generalTitle)
                     .font(.system(size: 15, weight: .semibold))
                 
                 // Settings card
                 VStack(spacing: 0) {
                     SettingsFormRow(
-                        label: "Show overlay when switching resolutions",
+                        label: .generalShowOverlay,
                         isOn: $settingsManager.showResolutionOverlay
                     )
                     
                     Divider()
                     
                     SettingsFormRow(
-                        label: "Launch at Login",
+                        label: .generalLaunchAtLogin,
                         isOn: $settingsManager.launchAtLogin
                     )
                     
                     Divider()
                     
                     SettingsFormRow(
-                        label: "Show in Dock",
+                        label: .generalShowInDock,
                         isOn: $settingsManager.showInDock
                     )
                     
                     Divider()
                     
                     SettingsFormRow(
-                        label: "Increment resolutions with keyboard shortcuts",
+                        label: .generalEnableIncrementShortcuts,
                         isOn: $settingsManager.enableIncrementShortcuts
                     )
                     
                     VStack(spacing: 0) {
                         IncrementShortcutRow(
-                            label: "Increase",
+                            label: .generalIncrease,
                             shortcut: settingsManager.incrementUpShortcut,
                             defaultShortcut: .defaultIncrementUp,
                             isRecording: $isRecordingUpShortcut,
@@ -83,7 +83,7 @@ struct GeneralSettingsTab: View {
                         Divider()
                         
                         IncrementShortcutRow(
-                            label: "Decrease",
+                            label: .generalDecrease,
                             shortcut: settingsManager.incrementDownShortcut,
                             defaultShortcut: .defaultIncrementDown,
                             isRecording: $isRecordingDownShortcut,
@@ -115,19 +115,19 @@ struct GeneralSettingsTab: View {
                     HStack(spacing: 8) {
                         Image(systemName: "wrench.fill")
                             .foregroundStyle(Color(.systemOrange))
-                        Text("Developer")
+                        Text(.generalDeveloper)
                             .font(.system(size: 13, weight: .bold))
                             .foregroundStyle(Color(.systemOrange))
                     }
                     
-                    Text("Visible in Debug builds only — never shown to users.")
+                    Text(.generalDeveloperDescription)
                         .font(.system(size: 11.5))
                         .foregroundStyle(.secondary)
                         .padding(.bottom, 4)
                     
                     VStack(spacing: 0) {
                         SettingsFormRow(
-                            label: "Always show onboarding at launch",
+                            label: .generalAlwaysShowOnboarding,
                             isOn: Binding(
                                 get: { DebugSettings.alwaysShowOnboarding },
                                 set: { DebugSettings.alwaysShowOnboarding = $0 }
@@ -153,7 +153,7 @@ struct GeneralSettingsTab: View {
 
 /// A reusable form row with a leading text label and a trailing control.
 private struct SettingsFormRow: View {
-    let label: LocalizedStringKey
+    let label: LocalizedStringResource
     @Binding var isOn: Bool
 
     var body: some View {
@@ -176,7 +176,7 @@ private struct SettingsFormRow: View {
 /// Shows the current shortcut (or default), a reset button when custom, and a Record/Cancel toggle.
 /// Mirrors the shortcut recording pattern from ``PresetEditorSheet``.
 private struct IncrementShortcutRow: View {
-    let label: LocalizedStringKey
+    let label: LocalizedStringResource
     let shortcut: KeyboardShortcut?
     let defaultShortcut: KeyboardShortcut
     @Binding var isRecording: Bool
@@ -199,7 +199,7 @@ private struct IncrementShortcutRow: View {
                 .frame(width: 65, alignment: .leading)
 
             if isRecording {
-                Text("Press a key combination...")
+                Text(.generalPressKeyCombo)
                     .font(.system(size: 12))
                     .foregroundStyle(Color.accentColor.opacity(0.7))
                     .padding(.horizontal, 12)
@@ -234,13 +234,13 @@ private struct IncrementShortcutRow: View {
                         .foregroundStyle(.tertiary)
                 }
                 .buttonStyle(.plain)
-                .help("Reset to default")
+                .help(String(localized: .generalResetToDefault))
             }
 
             Spacer()
 
             PillButton(
-                isRecording ? "Cancel" : "Record Shortcut",
+                isRecording ? .generalCancel : .generalRecordShortcut,
                 style: .monochrome
             ) {
                 if isRecording {

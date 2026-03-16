@@ -25,12 +25,12 @@ extension Bundle {
     
     var minimumOSVersion: String {
         if let minVersion = infoDictionary?["LSMinimumSystemVersion"] as? String {
-            return String(localized: "\(minVersion)+ Required", comment: "Minimum macOS version, e.g. '26.0+ Required'")
+            return String(localized: .bundleMinimumOSRequired(minVersion))
         }
         // Fallback to compile-time minimum deployment target
         if #available(macOS 26.0, *) {
-            return String(localized: "26.0+ Required", comment: "Fallback minimum macOS version")
+            return String(localized: .bundleMinimumOSFallback)
         }
-        return String(localized: "Unknown", comment: "Unknown minimum OS version")
+        return String(localized: .bundleMinimumOSUnknown)
     }
 }
