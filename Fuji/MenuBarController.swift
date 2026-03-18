@@ -105,8 +105,11 @@ final class MenuBarController: NSObject, NSMenuDelegate {
                 }
 
                 // Show ratio badges for each configuration's resolution
+                var seenRatios: Set<String> = []
                 let ratioLabels = preset.configurations.compactMap {
                     $0.mode.aspectRatioLabel
+                }.filter {
+                    seenRatios.insert($0).inserted
                 }
                 applyInlineRatioBadge(
                     to: presetItem, title: preset.name,
