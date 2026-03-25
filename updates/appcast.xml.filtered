@@ -58,5 +58,21 @@
                 length="8160563"
             />
         </item>
+        <item>
+            <title>Version 0.1.3</title>
+            <pubDate>Mon, 16 Mar 2026 10:52:25 +0000</pubDate>
+            <sparkle:version>0.1.3</sparkle:version>
+            <sparkle:shortVersionString>0.1.3</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+                    <description><![CDATA[
+<p dir="auto"><strong>Full Changelog</strong>: <a class="commit-link" href="https://github.com/uffelman/Fuji/compare/v0.1.2...v0.1.3"><tt>v0.1.2...v0.1.3</tt></a></p>
+                    ]]></description>
+            <enclosure
+                url="https://github.com/uffelman/Fuji/releases/download/v0.1.3/Fuji-v0.1.3-macos.zip"
+                type="application/octet-stream"
+                sparkle:edSignature="+y/2juNt0PANyuU1jelDyoE7olZXq+LYEVd7aRaNtOMaHqAZ9SgPsWdgtBHF2NBlUl8yGc+e5ekT6HI74FXYCg=="
+                length="8270481"
+            />
+        </item>
     </channel>
 </rss>
